@@ -1,0 +1,28 @@
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(158, 156, 156, 0.5);
+    z-index: 9999;
+    overflow: hidden;
+  }
+  
+  .loader {
+    border: 8px solid rgba(19, 19, 19, 0.1); /* Light background */
+    border-radius: 50%;
+    border-top: 8px solid rgb(2, 73, 145); /* Blue color */
+    width: 40px;
+    height: 40px;
+    animation: spin 1.5s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  

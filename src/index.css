@@ -11,3 +11,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.bgLogin {
+  background-image: url("../src/Assets/Images/loginbg.jpg");
+}
