@@ -9,7 +9,6 @@ import {
   IconButton,
   InputAdornment,
   Checkbox,
-  Typography,
 } from "@mui/material";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
@@ -39,15 +38,15 @@ const Login = () => {
   });
 
   const handleSubmit = (values, { setErrors }) => {
-    if (values.Username === "1" && values.password === "1") {
+    if (values.Username === "Admin" && values.password === "Lucas@123") {
       handleSesssionStorage("add", "ur", 1);
       navigate("/adminDashboard/home");
     } else {
       const errors = {};
-      if (values.Username !== "1") {
+      if (values.Username !== "Admin") {
         errors.Username = "Invalid username";
       }
-      if (values.password !== "1") {
+      if (values.password !== "Lucas@123") {
         errors.password = "Invalid password";
       }
       setErrors(errors);

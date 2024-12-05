@@ -1,16 +1,26 @@
 import { Box, Button, Typography } from '@mui/material'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { EmployeeListHead } from '../../../utils/constants/tableHead'
 import { useNavigate } from 'react-router-dom'
 import EmployeeTableList from '../../../Components/Common/employeeTableList'
+import { useDispatch, useSelector } from 'react-redux'
+import { getAllEmployeeDetailsApi } from '../../../redux/action/adminAction'
 
 const Home = () => {
 
+    const dispatch = useDispatch()
     const navigate = useNavigate();
+    
+    const { getAllEmployeeDetail } = useSelector((state) => state.admin);
 
     const handleNewEmployee = () => {
         navigate("/adminDashboard/addNewEmployee")
     }
+
+    useEffect(() => {
+        dispatch(getAllEmployeeDetailsApi())
+    }, [dispatch])
+
 
     return (
         <div>
@@ -21,6 +31,7 @@ const Home = () => {
                         fontWeight: "bold",
                         fontFamily: "'Roboto', sans-serif", // You can change the font family to match your design
                         color: "#303972", // Dark color for the heading
+                        fontSize: "2rem",
                         letterSpacing: "1px",
                         textTransform: "uppercase", // Makes it more formal and prominent
                         padding: "20px",
@@ -46,10 +57,9 @@ const Home = () => {
                 </div>
             </Box>
             <Box className="tablePad" >
-                <EmployeeTableList columns={EmployeeListHead} />
+                <EmployeeTableList columns={EmployeeListHead}  data={getAllEmployeeDetail?.Full_table || []} />
             </Box>
         </div>
-
     )
 }
 

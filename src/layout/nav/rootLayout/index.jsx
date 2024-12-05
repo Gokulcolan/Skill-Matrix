@@ -16,6 +16,8 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import logo from "../../../Assets/Images/tvs-lucas-logo.png";
 import { AdminMenuItems } from "../../../utils/constants/menuItems";
 import { handleSesssionStorage } from "../../../utils/helperFunctions";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+
 
 // const AppBar = styled(MuiAppBar)(({ theme }) => ({
 //   zIndex: theme.zIndex.drawer + 1,
@@ -24,7 +26,7 @@ import { handleSesssionStorage } from "../../../utils/helperFunctions";
 //     duration: theme.transitions.duration.leavingScreen,
 //   }),
 // }));
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Logout'];
 export default function RootLayout() {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
@@ -171,7 +173,8 @@ export default function RootLayout() {
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                {/* <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" /> */}
+                <AccountCircleIcon sx={{ fontSize: "3rem", color: "#1976d2" }} />
               </IconButton>
             </Tooltip>
             <Menu
@@ -190,11 +193,12 @@ export default function RootLayout() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
-                </MenuItem>
-              ))}
+              {/* {settings.map((setting) => ( */}
+              {/* key={setting} */}
+              <MenuItem onClick={handleCloseUserMenu}>
+                <Typography sx={{ textAlign: 'center' }} onClick={handleLogOut}>Logout</Typography>
+              </MenuItem>
+              {/* ))} */}
             </Menu>
           </Box>
 

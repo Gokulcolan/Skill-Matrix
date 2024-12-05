@@ -1,5 +1,4 @@
 import { ADMIN_BASE_URL } from "./configURL";
-import { showToast } from "../../components/Toast/toastService";
 import axios from "axios";
 
 console.log(ADMIN_BASE_URL, "ADMIN_BASE_URL");
@@ -43,7 +42,7 @@ export const Apiservice = async (method, url, body, params) => {
       ) {
         // Handle unauthorized or forbidden access
         // For example, you can show a message or redirect to login page
-        showToast("Unauthorized or Forbidden Access", "error");
+        console.log("Unauthorized or Forbidden Access", "error");
       } else {
         // showToast("An unexpected error occurred", "error");
         return Promise.reject(error);

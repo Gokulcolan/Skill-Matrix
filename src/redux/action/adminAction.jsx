@@ -1,6 +1,6 @@
 // redux/actions/userActions.js
 import { Apiservice } from "../api/apiService";
-import {  FoapartNumberReducer } from "../slice/userSlice";
+import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, updateCycleGamesReducer, updateEmployeeDetailReducer } from "../slice/adminSlice";
 
 // let loadingCounter = 0;
 // console.log(loadingCounter, "loadingCounter")
@@ -40,6 +40,22 @@ export function apiHelper(apiReducer, method, apiURL, data = "", Toastmessage = 
   };
 }
 
-export function FoapartNumberApi(payload) {
-  return apiHelper(FoapartNumberReducer, "POST", "/get_foa_varieties", payload);
+export function getAllEmployeeDetailsApi(payload) {
+  return apiHelper(getAllEmployeeDetailReducer, "GET", "/fetch_all_employee_detail", payload);
+}
+
+export function AddNewEmployeeApi(payload) {
+  return apiHelper(addNewEmployeeReducer, "POST", "/Add_new_employee", payload);
+}
+
+export function SearchEmployeApi(payload) {
+  return apiHelper(searchEmployeeReducer, "POST", "/overall_employee_details", payload);
+}
+
+export function updateEmployeDetailApi(payload) {
+  return apiHelper(updateEmployeeDetailReducer, "POST", "/update_employee_details", payload);
+}
+
+export function updateCycleGamesApi(payload) {
+  return apiHelper(updateCycleGamesReducer, "POST", "/Cycle_games_up_in", payload);
 }

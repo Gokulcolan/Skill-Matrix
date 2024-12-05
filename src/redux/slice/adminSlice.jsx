@@ -1,24 +1,59 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
-    // partNumberDetail: [],
-    // partNumberIsLoading: false,
-   
+    addNewEmployeeDetail: [],
+    addNewEmployeeIsLoading: false,
+    searchEmployeeDetail: [],
+    searchEmployeeIsLoading: false,
+    updateEmployeeDetail: [],
+    updateEmployeeIsLoading: false,
+    getAllEmployeeDetail: [],
+    getAllEmployeeDetailIsLoading: false,
+    updateCycleGamesDetail: [],
+    updateCycleGamesIsLoading: false
   },
   reducers: {
-    // partNumberReducer: (state, { payload }) => {
-    //   const { apiData, isLoading } = payload;
-    //   state.partNumberDetail = apiData;
-    //   state.partNumberIsLoading = isLoading;
-    // },
-   
+    addNewEmployeeReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.addNewEmployeeDetail = apiData;
+      state.addNewEmployeeIsLoading = isLoading;
+    },
+    searchEmployeeReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.searchEmployeeDetail = apiData;
+      state.searchEmployeeIsLoading = isLoading;
+    },
+    updateEmployeeDetailReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.updateEmployeeDetail = apiData;
+      state.updateEmployeeIsLoading = isLoading;
+    },
+    getAllEmployeeDetailReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.getAllEmployeeDetail = apiData;
+      state.getAllEmployeeDetailIsLoading = isLoading;
+    },
+    updateCycleGamesReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.updateCycleGamesDetail = apiData;
+      state.updateCycleGamesIsLoading = isLoading;
+    },
+    resetEmployeeData: (state) => {
+      // Reset the state to its initial structure
+      return {
+        ...state,
+        addNewEmployeeDetail: [],
+        searchEmployeeDetail: [],
+        updateEmployeeDetail: [],
+        getAllEmployeeDetail: [],
+      };
+    },
   },
 });
 
-// export const { partNumberReducer } = adminSlice.actions;
+export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, resetEmployeeData } = adminSlice.actions;
 
 export const adminSelector = (state) => state.admin;
 export const adminReducer = adminSlice.reducer;
