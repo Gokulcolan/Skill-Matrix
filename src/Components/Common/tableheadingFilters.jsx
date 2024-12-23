@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { CycleGamesExerciseData, DaysFilter, SafetyTrainingHead, SafetyTrainingValues } from '../../utils/constants/tableHead';
+import { CycleGamesExerciseData, DaysFilter, SafetyTrainingHead, SafetyTrainingValues } from '../../utils/constants/tableDatas';
 import CommonDropdown from './commonDropDown';
 import { Grid, Typography } from "@mui/material";
-import SafetyTrainingTable from './safetyTrainingTable';
-import CycleTimeGamesTable from './cycleTimeGamesTable';
+import SafetyTrainingTable from '../SafetyTraining/safetyTrainingTable';
+import CycleTimeGamesTable from '../CycleGames/cycleTimeGamesTable';
+
 
 const TableFilters = ({ employeeTrainingDetails }) => {
 
@@ -28,26 +29,8 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 Remarks: "",
             }))
     );
-
-
-    const [updatedCycleGamesValues, setUpdatedCycleGamesValues] = useState(
-        () =>
-            (CycleGamesExerciseData || []).map(row => ({
-                ...row,
-                Signature_by_Process_Coach: "",
-                Signature_by_Trainee: "",
-                Signature_by_Training_Officer: "",
-                attempt_number: "",
-                attempts_id: "",
-                cc_no: "",
-                cycle_time: "",
-                mistakes: "",
-                pf_status: "",
-                status_: "",
-            }))
-    );
-
-    console.log(updatedCycleGamesValues, "updatedCycleGamesValues")
+    
+    const [updatedCycleGamesValues, setUpdatedCycleGamesValues] = useState([]);
 
     useEffect(() => {
         if (TrainingDetails) {
@@ -69,36 +52,64 @@ const TableFilters = ({ employeeTrainingDetails }) => {
     }, [TrainingDetails, SafetyTrainingValues]);
 
     useEffect(() => {
-        if (!CycleGames || !CycleGamesExerciseData || CycleGames.length === 0 || CycleGamesExerciseData.length === 0) {
-            console.log("Data not loaded yet.");
-            return; // Exit early if data is not ready
+        if (CycleGames && CycleGames.length > 0) {
+            const updatedValues = CycleGamesExerciseData.map((exerciseData) => {
+                // Find matching game for this exercise, if exists
+                const matchingGame = CycleGames.find(game => game.task_id === exerciseData.task_id) || {};
+    
+                // Create consistent attempts array with 5 entries
+                const attempts = Array.from({ length: 5 }, (_, index) => {
+                    const attempt = matchingGame.attempts ? 
+                        (matchingGame.attempts[index] || {}) : 
+                        {};
+                    
+                    return {
+                        attempt_number: index + 1,
+                        cycle_time: attempt.cycle_time || "",
+                        mistakes: attempt.mistakes || "",
+                        pf_status: attempt.pf_status || "",
+                    };
+                });
+    
+                return {
+                    task_id: exerciseData.task_id,
+                    dct: exerciseData.dct,
+                    name: exerciseData.name,
+                    sign: {
+                        Signature_by_Process_Coach: matchingGame.sign?.Signature_by_Process_Coach || "",
+                        Signature_by_Trainee: matchingGame.sign?.Signature_by_Trainee || "",
+                        Signature_by_Training_Officer: matchingGame.sign?.Signature_by_Training_Officer || "",
+                    },
+                    attempts: attempts,
+                    status_: matchingGame.status_ || "",
+                };
+            });
+    
+            setUpdatedCycleGamesValues(updatedValues);
+        } else {
+            // If no data, create a default set of 5 exercises with empty data
+            const defaultValues = CycleGamesExerciseData.map((exerciseData) => ({
+                task_id: exerciseData.task_id,
+                dct: exerciseData.dct,
+                name: exerciseData.name,
+                sign: {
+                    Signature_by_Process_Coach: "",
+                    Signature_by_Trainee: "",
+                    Signature_by_Training_Officer: "",
+                },
+                attempts: Array.from({ length: 5 }, (_, index) => ({
+                    attempt_number: index + 1,
+                    cycle_time: "",
+                    mistakes: "",
+                    pf_status: "",
+                })),
+                status_: "",
+            }));
+    
+            setUpdatedCycleGamesValues(defaultValues);
         }
-
-        const updatedValues = CycleGamesExerciseData.map((row) => {
-            // Make sure task_id from both arrays are compared as strings
-            const matchingDetail = CycleGames.find(
-                (detail) => String(detail.task_id) === String(row.task_id)
-            );
-
-            return {
-                ...row,
-                Signature_by_Process_Coach: matchingDetail?.Signature_by_Process_Coach || "",
-                Signature_by_Trainee: matchingDetail?.Signature_by_Trainee || "",
-                Signature_by_Training_Officer: matchingDetail?.Signature_by_Training_Officer || "",
-                attempt_number: matchingDetail?.attempt_number || "",
-                attempts_id: matchingDetail?.attempts_id || "",
-                cc_no: matchingDetail?.cc_no || "",
-                cycle_time: matchingDetail?.cycle_time || "",
-                mistakes: matchingDetail?.mistakes || "",
-                pf_status: matchingDetail?.pf_status || "",
-                status_: matchingDetail?.status_ || "",
-            };
-        });
-
-        console.log("Updated Values:", updatedValues);
-        setUpdatedCycleGamesValues(updatedValues);
-    }, [CycleGames, CycleGamesExerciseData]);
-
+    }, [CycleGames]);
+    
 
     const handleDropdownChange = (value) => {
         setSelectedValue(value);
@@ -123,6 +134,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
     const owner = selectedValue === 40
         ? "Owner: Module Controller"
         : "Owner: Training Officer";
+
 
     const table = selectedValue === 10 ? <SafetyTrainingTable columns={SafetyTrainingHead} data={updatedSafetyTrainingValues} cc={cc} /> : <CycleTimeGamesTable data={updatedCycleGamesValues} cc={cc} />
 

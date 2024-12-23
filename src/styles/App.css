@@ -48,6 +48,17 @@
   justify-content: center !important;
 }
 
+td {
+  padding: 8px;
+  width: 150px; /* Adjust this based on your design needs */
+  overflow: hidden; /* Prevents content overflow */
+  word-wrap: break-word; /* Prevents text from overflowing horizontally */
+}
+
+table {
+  width: 100%; /* Ensure the table takes up the full available width */
+}
+
 .tablePad {
   padding: 0px 50px;
 }
@@ -98,9 +109,8 @@
   padding: 10px 20px;
   font-size: 16px;
   font-weight: bold;
-  
   color: #ffffff;
-  background-color: rgb(0, 150, 63);
+  background-color: rgb(0, 150, 63) !important;
   border: none;
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -118,4 +128,76 @@
   display: flex;
   justify-content: flex-end; /* Aligns content to the right */
   align-items: center; /* Aligns items vertically (optional) */
+}
+
+.search-container1 {
+  display: flex;
+  justify-content: space-between; /* Spread items to corners */
+  align-items: center; /* Align items vertically */
+  padding: 0 10px; /* Optional: Add some padding */
+}
+
+.field-style {
+  height: 35px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  margin-bottom: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.signature-img {
+  border: 1px solid #ccc;
+  background-color: white;
+  width: 100%;
+  height: 35px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  padding: 5px;
+}
+
+.field-drop-style {
+  height: 35px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.bg-img {
+  background-image: url("../Assets/Images/iStock-1366425889.webp");
+  background-position: center 20%;  /* Moves the image 20% from the bottom */
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
+  height: 20vh; /* Ensures the background image takes up the desired height */
+  position: relative;
+  z-index: 1; /* Set the background behind the text */
+  display: flex;
+  align-items: center; /* Vertically center the text */
+  justify-content: center; /* Horizontally center the text */
+}
+
+.bg-img::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3)); /* Dark to light gradient */
+  z-index: 2; /* Ensure the overlay is above the image */
+}
+
+.highlight {
+  background-color: #ffff99; /* Light yellow background */
+  font-weight: bold; /* Bold text */
+  padding: 5px; /* Optional padding for better visibility */
+  border-radius: 4px; /* Optional rounded corners */
 }

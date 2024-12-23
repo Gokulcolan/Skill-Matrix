@@ -71,8 +71,24 @@ const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey 
                     >
                       View
                     </Button>
+                  ) : column.id === "photo" ? ( // Render photo if column.id is "photo"
+                    row[column.id] && ( // Ensure there's a value for photo
+                      (row[column.id].startsWith("http") || row[column.id].startsWith("data:image")) ? (
+                        <img
+                          src={row[column.id]} // Use the URL or Base64 data directly
+                          alt="Employee"
+                          style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+                        />
+                      ) : (
+                        <img
+                          src="placeholder-image-url.png" // Fallback to placeholder if the data is invalid
+                          alt="Placeholder"
+                          style={{ width: "50px", height: "50px", borderRadius: "50%" }}
+                        />
+                      )
+                    )
                   ) : (
-                    row[column.id] || "-"
+                    row[column.id] || "-" // Render regular data
                   )}
                 </StyledTableCell>
               ))}

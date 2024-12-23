@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import EmployeeDetailsCard from '../../../Components/Common/employeeDetailsCard'
 import CustomTextField from '../../../Components/Common/customTextField'
 import SearchIcon from '@mui/icons-material/Search';
 import TableFilters from '../../../Components/Common/tableheadingFilters'
 import { SearchEmployeApi } from '../../../redux/action/adminAction';
 import { useDispatch, useSelector } from 'react-redux';
 import { showToast } from '../../../Components/Toast/toastServices';
+import EmployeeDetailsCard from '../../../Components/EmployeeDetails/employeeDetailsCard';
+import { resetEmployeeData } from '../../../redux/slice/adminSlice';
 
 const ProgessDetails = () => {
 
@@ -16,7 +17,7 @@ const ProgessDetails = () => {
     const dispatch = useDispatch()
 
     const handleSearch = () => {
-        
+
         if (!inputValue) {
             alert("Please enter a valid CC Number");
             return;
@@ -45,6 +46,7 @@ const ProgessDetails = () => {
     const handleChange = (e) => {
         setInputValue(e.target.value)
     }
+
 
     return (
 

@@ -1,6 +1,6 @@
 // redux/actions/userActions.js
 import { Apiservice } from "../api/apiService";
-import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, updateCycleGamesReducer, updateEmployeeDetailReducer } from "../slice/adminSlice";
+import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateEmployeeDetailReducer } from "../slice/adminSlice";
 
 // let loadingCounter = 0;
 // console.log(loadingCounter, "loadingCounter")
@@ -58,4 +58,8 @@ export function updateEmployeDetailApi(payload) {
 
 export function updateCycleGamesApi(payload) {
   return apiHelper(updateCycleGamesReducer, "POST", "/Cycle_games_up_in", payload);
+}
+
+export function signVerifyApi(payload) {
+  return apiHelper(signVerifyReducer, "POST", "/mouse_sign", payload);
 }

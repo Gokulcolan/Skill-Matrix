@@ -12,7 +12,9 @@ const adminSlice = createSlice({
     getAllEmployeeDetail: [],
     getAllEmployeeDetailIsLoading: false,
     updateCycleGamesDetail: [],
-    updateCycleGamesIsLoading: false
+    updateCycleGamesIsLoading: false,
+    signVerifyDetail: [],
+    signVerifyIsLoading: false
   },
   reducers: {
     addNewEmployeeReducer: (state, { payload }) => {
@@ -40,20 +42,18 @@ const adminSlice = createSlice({
       state.updateCycleGamesDetail = apiData;
       state.updateCycleGamesIsLoading = isLoading;
     },
+    signVerifyReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.signVerifyDetail = apiData;
+      state.signVerifyIsLoading = isLoading;
+    },
     resetEmployeeData: (state) => {
-      // Reset the state to its initial structure
-      return {
-        ...state,
-        addNewEmployeeDetail: [],
-        searchEmployeeDetail: [],
-        updateEmployeeDetail: [],
-        getAllEmployeeDetail: [],
-      };
+      state.searchEmployeeDetail = null;
     },
   },
 });
 
-export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, resetEmployeeData } = adminSlice.actions;
+export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, signVerifyReducer, resetEmployeeData } = adminSlice.actions;
 
 export const adminSelector = (state) => state.admin;
 export const adminReducer = adminSlice.reducer;

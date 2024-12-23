@@ -1,4 +1,3 @@
-// toastService.js
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -14,16 +13,22 @@ const toastConfig = {
     pauseOnHover: true,
 };
 
-export const showToast = (message, type = "success") => {
+const getToastStyle = (type) => {
     switch (type) {
         case "success":
-            toast.success(message, toastConfig);
-            break;
+            return { backgroundColor: "#4caf50", color: "#fff" }; // Green background
         case "error":
-            toast.error(message, toastConfig);
-            break;
-        // Add more cases for different toast types if needed
+            return { backgroundColor: "#f44336", color: "#fff" }; // Red background
+        case "info":
+            return { backgroundColor: "#2196f3", color: "#fff" }; // Blue background
+        case "warning":
+            return { backgroundColor: "#ff9800", color: "#fff" }; // Orange background
         default:
-            toast(message, toastConfig);
+            return { backgroundColor: "#333", color: "#fff" }; // Default background
     }
+};
+
+export const showToast = (message, type = "success") => {
+    const toastStyle = getToastStyle(type);
+    toast(message, { ...toastConfig, style: toastStyle });
 };
