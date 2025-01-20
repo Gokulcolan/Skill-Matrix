@@ -21,7 +21,6 @@ const CustomTextField = ({
   autoFocus = false,
   variant = "outlined",
   inputProps = {},
- 
   ...props
 }) => {
   return (
@@ -43,7 +42,9 @@ const CustomTextField = ({
       helperText={helperText}
       placeholder={placeholder}
       disabled={disabled}
-      InputProps={inputProps}
+      InputLabelProps={{
+        shrink: Boolean(value) || undefined, // Ensures the label shrinks if there is a value
+      }}
       style={{ ...customStyles }}
       {...props}
     />

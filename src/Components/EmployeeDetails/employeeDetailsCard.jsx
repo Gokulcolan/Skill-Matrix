@@ -49,6 +49,7 @@ const EmployeeDetailsCard = ({ employeeDetails }) => {
     }
 
     const bio = employeeDetails?.bio[0]; // Access the first item in the bio array
+    console.log(bio,"bio")
 
 
     return (
@@ -75,8 +76,8 @@ const EmployeeDetailsCard = ({ employeeDetails }) => {
                             <p><b>Name</b> - {bio?.name_}</p>
                             <p><b>CC NO</b> - {bio?.cc_no}</p>
                             <p><b>Designation</b> - {bio?.designation}</p>
-                            {bio?.is_existing ?
-                                <p className="highlight"><b>Previously Worked in LucasTVS</b> - {bio?.is_existing === "1" ? "Yes" : "No"}</p> : ""}
+                            {bio?.is_existing === "1" ?
+                                <p className="highlight"><b>Previously Worked in LucasTVS</b> - Yes</p> : ""}
                         </div>
                         <div className="details-column">
                             <p><b>Date Of Joining</b> - {bio?.date_of_joining}</p>

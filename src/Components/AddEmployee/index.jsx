@@ -1,49 +1,70 @@
-import React, { useEffect } from 'react';
-import { Formik, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
+import React, { useState, useEffect, useRef } from "react";
 import {
-    Container,
-    Box,
-    Typography,
-    Button,
     Grid,
-    Paper,
-    FormHelperText,
+    Box,
+    Button,
+    CircularProgress,
     FormControlLabel,
-    Checkbox
-} from '@mui/material';
-import FormikTextField from '../Common/commonTextField';
-import { AddNewEmployeeApi } from '../../redux/action/adminAction';
-import { useDispatch, useSelector } from 'react-redux';
-import { showToast } from '../Toast/toastServices';
-import { useNavigate } from 'react-router-dom';
+    Checkbox,
+    Card,
+    CardContent,
+    Typography,
+    CardHeader,
+} from "@mui/material";
+import { Formik, Form } from "formik";
+import * as Yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import UploadIcon from "@mui/icons-material/Upload";
+import CancelIcon from '@mui/icons-material/Cancel';
+import FormikTextField from "../Common/commonTextField";
+import { AddNewEmployeeApi } from "../../redux/action/adminAction";
+import { showToast } from "../Toast/toastServices";
+import { useNavigate } from "react-router-dom";
+
 
 const AddNewEmployee = () => {
-    
-    const dispatch = useDispatch()
+
+    const dispatch = useDispatch();
+    const videoRef = useRef(null);
     const navigate = useNavigate()
+
+    const [imagePreview, setImagePreview] = useState(null);
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [stream, setStream] = useState(null);
 
     const { addNewEmployeeDetail } = useSelector((state) => state.admin);
 
+    // Cleanup effect for camera stream
+    useEffect(() => {
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [stream]);
+
     const initialValues = {
-        traineeName: '',
-        ccNumber: '',
+        traineeName: "",
+        ccNumber: "",
+        qualification: "",
+        branch: "",
+        designation: "",
+        yearOfPass: "",
+        grade: "",
+        collegeName: "",
+        joiningDate: "",
+        photo: null,
         previouslyWorked: false,
         previousCcNumber: '',
-        qualification: '',
-        branch: "",
-        designation: '',
-        yearOfPass: '',
-        grade: '',
-        collegeName: "",
-        joiningDate: '',
-        photo: null,
     };
 
     const validationSchema = Yup.object({
-        traineeName: Yup.string().required('Trainee Name is required'),
-        ccNumber: Yup.string().matches(/^\d+$/, "CC Number must contain only numbers")
-            .required('CC Number is required'),
+        traineeName: Yup.string().required("Trainee Name is required"),
+        ccNumber: Yup.string()
+            .matches(/^\d+$/, " CC Number must contain only numbers")
+            .required(' CC Number is required'),
+        qualification: Yup.string().required("Qualification is required"),
         previouslyWorked: Yup.boolean(),
         previousCcNumber: Yup.string().when('previouslyWorked', {
             is: true,
@@ -52,226 +73,446 @@ const AddNewEmployee = () => {
                 .required('Previous CC Number is required'),
             otherwise: () => Yup.string()
         }),
-        qualification: Yup.string().required('Qualification is required'),
-        branch: Yup.string().required('Branch is required'),
-        designation: Yup.string().required('Designation is required'),
+        branch: Yup.string().required("Branch is required"),
+        designation: Yup.string().required("Designation is required"),
         yearOfPass: Yup.number()
-            .positive('Year of Pass must be a positive number')
-            .integer('Year of Pass must be an integer')
-            .required('Year of Pass is required'),
-        grade: Yup.string().required('Grade is required'),
-        joiningDate: Yup.date().required('Joining Date is required'),
-        collegeName: Yup.string().required('College Name is required'),
-        photo: Yup.mixed()
-            .nullable()
-            .required('Photo is required')
-            .test('fileType', 'Only image files are allowed', (value) => {
-                return value && ['image/jpeg', 'image/png', 'image/jpg'].includes(value?.type);
-            })
-            .test('fileSize', 'File size must be less than 2MB', (value) => {
-                return value && value?.size <= 2 * 1024 * 1024; // 2MB
-            }),
+            .required("Year of Pass is required")
+            .typeError("Must be a valid number"),
+        grade: Yup.string().required("Grade is required"),
+        collegeName: Yup.string().required("College Name is required"),
+        joiningDate: Yup.date().required("Joining Date is required"),
+        photo: Yup.mixed().required("Photo is required"),
     });
 
-    const convertToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
+    const handleFileUpload = (event, setFieldValue) => {
+        const file = event.target.files[0];
+        if (file) {
+            const isValidType = ["image/jpeg", "image/png", "image/jpg"].includes(file.type);
+            const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB limit
+
+            if (!isValidType || !isValidSize) {
+                showToast(
+                    isValidType
+                        ? "File too large. Max size is 2MB."
+                        : "Invalid file type. Only JPG/PNG allowed.",
+                    "error"
+                );
+                return;
+            }
+
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        try {
-            // Convert photo to Base64 if provided
-            const photoBase64 = e.photo ? await convertToBase64(e.photo) : null;
-
-            // Prepare the payload
-            const payload = {
-                train: [
-                    {
-                        name: e.traineeName,
-                        cc_no: e.ccNumber,
-                        previous_cc_no: e.previouslyWorked ? e.previousCcNumber : null,
-                        previously_worked: e.previouslyWorked,
-                        Designation: e.designation,
-                        date_of_joining: e.joiningDate,
-                        grade: e.grade,
-                        year_passed_out: e.yearOfPass,
-                        qualification: e.qualification,
-                        Branch: e.branch,
-                        college_name: e.collegeName,
-                        photo: photoBase64,
-                    },
-                ],
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+                setFieldValue("photo", file); // Make sure to pass the file here
             };
-            // Dispatch the action to add a new employee
-            await dispatch(AddNewEmployeeApi(payload));
-        } catch (error) {
-            console.error("Error submitting employee data:", error);
-            showToast("An unexpected error occurred. Please try again.", "error");
+            reader.readAsDataURL(file);
         }
     };
 
     useEffect(() => {
-        if (addNewEmployeeDetail) {
-            if (addNewEmployeeDetail?.status === 'Success') {
-                showToast(addNewEmployeeDetail?.message || "Employee registered successfully!", "success");
-                navigate("/adminDashboard/home");
-            } else if (addNewEmployeeDetail?.status === 'Failed') {
-                showToast(addNewEmployeeDetail?.message || "Failed to register the employee. Please try again.", "error");
-            }
+        if (isCameraOpen && videoRef.current && stream) {
+            videoRef.current.srcObject = stream;
         }
-    }, [addNewEmployeeDetail, navigate]);
+    }, [isCameraOpen, stream]);
 
+    const handleOpenCamera = async () => {
+        try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: "user"  // Use front camera
+                }
+            });
+
+            setStream(mediaStream);
+            setIsCameraOpen(true);
+
+            // Directly set the stream to video element
+            if (videoRef.current) {
+                videoRef.current.srcObject = mediaStream;
+            }
+        } catch (error) {
+            console.error('Camera access error:', error);
+            showToast("Unable to access the camera. Please check permissions.", "error");
+        }
+    };
+
+    const handleCapturePhoto = async (setFieldValue) => {
+        if (!videoRef.current) {
+            showToast("Video element not found.", "error");
+            return;
+        }
+
+        try {
+            // Create a canvas element
+            const canvas = document.createElement("canvas");
+            const video = videoRef.current;
+
+            // Set canvas dimensions to match the video dimensions
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the current video frame
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to blob
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            const imageUrl = URL.createObjectURL(blob);
+
+            // Create a File object from the blob
+            const file = new File([blob], "captured-photo.jpg", { type: 'image/jpeg' });
+
+            // Update preview and form
+            setImagePreview(imageUrl);
+            setFieldValue("photo", file); // Ensure the file is set to the Formik field
+
+            // Close camera after capture
+            closeCamera();
+        } catch (error) {
+            console.error('Photo capture error:', error);
+            showToast("Failed to capture photo", "error");
+        }
+    };
+
+    const closeCamera = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+        setIsCameraOpen(false);
+        if (videoRef.current) {
+            videoRef.current.srcObject = null;
+        }
+    };
+
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+
+        setSubmitting(true);
+
+        try {
+            // Initialize the body object for the request
+            const body = {
+                train: [{
+                    Branch: values.branch,
+                    cc_no: values.ccNumber,
+                    college_name: values.collegeName,
+                    Designation: values.designation,
+                    grade: values.grade,
+                    date_of_joining: values.joiningDate,
+                    qualification: values.qualification,
+                    name: values.traineeName,
+                    year_passed_out: values.yearOfPass,
+                    previous_cc_no: values.previouslyWorked ? values.previousCcNumber : null,
+                    previously_worked: values.previouslyWorked,
+                }]
+            };
+
+            // Check if photo is provided and convert to base64
+            if (values.photo) {
+                const base64Photo = await convertToBase64(values.photo);
+                // Add the base64 photo inside the 'train' array object
+                body.train[0].photo = base64Photo; // Add the base64 photo to the 'train' array object
+            } else {
+                console.log("No photo selected!");
+            }
+
+            // Log the body to verify all fields are appended
+            console.log("Request Body:", body);
+
+            // Send the body data to the AP
+            await dispatch(AddNewEmployeeApi(body));
+            // Handle response and show appropriate message
+            if (addNewEmployeeDetail?.status === 'Success') {
+                showToast("Employee added successfully!", "success");
+                resetForm();
+                setImagePreview(null); // Reset the image preview after submission
+                navigate("/adminDashboard/home");
+            } else {
+                showToast("Failed to add employee", "error");
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+        }
+
+        finally {
+            setSubmitting(false); // Reset the submitting state
+        }
+    };
+
+    // Helper function to convert image file to base64
+    const convertToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = () => {
+                resolve(reader.result); // The result is the base64 string
+            };
+
+            reader.onerror = (error) => {
+                reject(error); // If there was an error during conversion
+            };
+        });
+    };
+
+    // Rest of your component remains the same...
     return (
-        <Container maxWidth="md">
-            <Paper
-                elevation={3}
+        <>
+            <Box
                 sx={{
-                    mt: 4,
-                    padding: '20px',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    // minHeight: '100vh', // Ensure it's centered even on a full page
+                    mb: 5, // Add padding to the container
                 }}
             >
-                <Box my={2}>
-                    <Typography
-                        variant="h5"
-                        align="center"
-                        sx={{
-                            fontWeight: 'bold',
-                            color: 'primary.main',
-                            textTransform: 'uppercase',
-                            letterSpacing: '2px',
-                            mb: 3,
-                        }}
-                    >
-                        Trainees Progress Card
-                    </Typography>
-                </Box>
-                <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={handleSubmit}
+                <Card
+                    sx={{
+                        width: '100%',
+                        maxWidth: '1200px',
+                        boxShadow: 3, // Slightly stronger shadow for better depth
+                        borderRadius: 3, // Rounded corners for a soft look
+                        transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out', // Smooth hover effect
+                        '&:hover': {
+                            transform: 'scale(1.02)', // Slightly enlarge on hover
+                            boxShadow: 6, // Enhance the shadow on hover
+                        },
+                    }}
                 >
-                    {({ setFieldValue, values, touched, errors }) => (
-                        <Form>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="traineeName" label="Trainee Name" />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="ccNumber" label="CC Number" />
-                                </Grid>
-                                {/* Rest of the form remains the same */}
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="grade" label="Grade" />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="designation" label="Designation" />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="qualification" label="Qualification" />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField name="branch" label="Branch" />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField
-                                        name="collegeName"
-                                        label="College Name"
-                                        type="text"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField
-                                        name="yearOfPass"
-                                        label="Year of Pass"
-                                        type="number"
-                                    />
-                                </Grid>
 
-                                <Grid item xs={12} md={6}>
-                                    <FormikTextField
-                                        name="joiningDate"
-                                        label="Joining Date"
-                                        type="date"
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                    />
-                                </Grid>
-
-                                <Grid item xs={12} md={6}>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(event) => setFieldValue('photo', event.currentTarget.files[0])}
-                                        style={{
-                                            display: 'block',
-                                            padding: '10px',
-                                            border: '1px solid #ccc',
-                                            borderRadius: '4px',
-                                            backgroundColor: '#f9f9f9',
-                                            cursor: 'pointer',
-                                        }}
-                                    />
-                                    <ErrorMessage name="photo" component={FormHelperText} sx={{ color: 'error.main' }} />
-                                </Grid>
-                                {/* New checkbox for previous work experience */}
-                                <Grid item xs={12} md={6}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={values.previouslyWorked}
-                                                onChange={(e) => {
-                                                    setFieldValue('previouslyWorked', e.target.checked);
-                                                    // Clear previous CC number if unchecked
-                                                    if (!e.target.checked) {
-                                                        setFieldValue('previousCcNumber', '');
-                                                    }
-                                                }}
-                                                color="primary"
+                    <CardHeader
+                        sx={{
+                            backgroundColor: '#1976d2',
+                            padding: '12px 24px',
+                            textAlign: 'center',
+                        }}
+                        title={
+                            <Typography
+                                variant="h6" // Specify a variant that fits your design
+                                sx={{
+                                    fontSize: '18px', // Reduces the font size
+                                    fontWeight: '600',
+                                    letterSpacing: '1px',
+                                    textTransform: 'uppercase',
+                                    color: 'white',
+                                }}
+                            >
+                                Trainees Progress Card
+                            </Typography>
+                        }
+                    />
+                    <CardContent sx={{
+                        padding: '24px', // Padding around the content
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2, // Spacing between content sections
+                    }}>
+                        <Formik
+                            initialValues={initialValues}
+                            validationSchema={validationSchema}
+                            onSubmit={handleSubmit}
+                        >
+                            {({ values, setFieldValue, isSubmitting, handleChange, touched, errors }) => (
+                                <Form>
+                                    <Grid container spacing={2}>
+                                        {/* Other form fields remain the same... */}
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="traineeName" label="Trainee Name" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="ccNumber" label="CC Number" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="qualification" label="Qualification" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="branch" label="Branch" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="designation" label="Designation" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="yearOfPass" label="Year of Pass" type="number" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="grade" label="Grade" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField name="collegeName" label="College Name" />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormikTextField
+                                                name="joiningDate"
+                                                label="Joining Date"
+                                                type="date"
+                                                InputLabelProps={{ shrink: true }}
                                             />
-                                        }
-                                        label="Have you worked at Lucas TVS before?"
-                                    />
-                                </Grid>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Box
+                                                sx={{
+                                                    border: "1px dashed #ccc",
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    textAlign: "center",
+                                                    minHeight: "100px", // Ensures the container has a minimum height
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                {imagePreview ? (
+                                                    <Box sx={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                                                        <img
+                                                            src={imagePreview}
+                                                            alt="Preview"
+                                                            style={{
+                                                                maxWidth: "90%",  // Reduced size for better UI
+                                                                height: "auto",
+                                                                maxHeight: "120px",  // Reduced height for better proportion
+                                                                objectFit: "contain", // Keeps the image's aspect ratio
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            color="error"
+                                                            onClick={() => {
+                                                                setImagePreview(null);
+                                                                setFieldValue("photo", null);
+                                                            }}
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                top: 5,
+                                                                right: 5,
+                                                                zIndex: 1,
+                                                                padding: '2px', // Makes the button smaller
+                                                            }}
+                                                        >
+                                                            <CancelIcon />
+                                                        </Button>
+                                                    </Box>
+                                                ) : isCameraOpen ? (
+                                                    <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                                                        <video
+                                                            ref={videoRef}
+                                                            autoPlay
+                                                            playsInline
+                                                            muted
+                                                            style={{
+                                                                width: '90%',  // Reduced width for video preview
+                                                                maxWidth: '200px',  // Slightly smaller size for better UI
+                                                                height: 'auto',
+                                                                objectFit: 'cover',
+                                                                backgroundColor: '#000',
+                                                            }}
+                                                        />
+                                                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', gap: 2 }}>
+                                                            <Button
+                                                                variant="contained"
+                                                                color="primary"
+                                                                onClick={() => handleCapturePhoto(setFieldValue)}
+                                                                startIcon={<CameraAltIcon />}
+                                                            >
+                                                                Capture Photo
+                                                            </Button>
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="secondary"
+                                                                onClick={closeCamera}
+                                                            >
+                                                                Close Camera
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                ) : (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                                                        <Button
+                                                            variant="contained"
+                                                            onClick={handleOpenCamera}
+                                                            startIcon={<CameraAltIcon />}
+                                                        >
+                                                            Open Camera
+                                                        </Button>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            id="photo-upload"
+                                                            style={{ display: "none" }}
+                                                            onChange={(e) => handleFileUpload(e, setFieldValue)}
+                                                        />
+                                                        <label htmlFor="photo-upload">
+                                                            <Button
+                                                                variant="contained"
+                                                                component="span"
+                                                                startIcon={<UploadIcon />}
+                                                            >
+                                                                Upload Photo
+                                                            </Button>
+                                                        </label>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </Grid>
 
-                                {/* Conditional Previous CC Number field */}
-                                {values.previouslyWorked && (
-                                    <Grid item xs={12} md={6}>
-                                        <FormikTextField
-                                            name="previousCcNumber"
-                                            label="Previous CC Number"
-                                            helperText="Please enter your previous CC Number"
-                                        />
+
+                                        <Grid item xs={12} md={6}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={values.previouslyWorked}
+                                                        onChange={(e) => {
+                                                            setFieldValue('previouslyWorked', e.target.checked);
+                                                            // Clear previous CC number if unchecked
+                                                            if (!e.target.checked) {
+                                                                setFieldValue('previousCcNumber', '');
+                                                            }
+                                                        }}
+                                                        color="primary"
+                                                    />
+                                                }
+                                                label="Have you worked at Lucas TVS before?"
+                                            />
+                                        </Grid>
+
+                                        {/* Conditional Previous CC Number field */}
+                                        {values.previouslyWorked && (
+                                            <Grid item xs={12} md={6}>
+                                                <FormikTextField
+                                                    name="previousCcNumber"
+                                                    label="Previous CC Number"
+                                                    helperText="Please enter your previous CC Number"
+                                                    value={values.previousCcNumber}
+                                                    onChange={handleChange} // Make sure handleChange is available from Formik
+                                                    error={touched.previousCcNumber && Boolean(errors.previousCcNumber)}
+                                                    helperText={touched.previousCcNumber && errors.previousCcNumber}
+                                                />
+                                            </Grid>
+                                        )}
+
                                     </Grid>
-                                )}
-                            </Grid>
-                            <Box mt={3}>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="primary"
-                                    fullWidth
-                                    sx={{
-                                        padding: '10px 0',
-                                        fontWeight: 'bold',
-                                        letterSpacing: '1px',
-                                    }}
-                                >
-                                    Register New Trainee
-                                </Button>
-                            </Box>
-                        </Form>
-                    )}
-                </Formik>
-            </Paper>
-        </Container>
+                                    <Box mt={3}>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            color="primary"
+                                            disabled={isSubmitting}
+                                            startIcon={isSubmitting && <CircularProgress size={20} />}
+                                        >
+                                            Submit
+                                        </Button>
+                                    </Box>
+                                </Form>
+                            )}
+                        </Formik>
+                    </CardContent>
+                </Card>
+            </Box >
+        </>
+
+
     );
 };
 

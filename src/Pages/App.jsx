@@ -10,10 +10,8 @@ function App() {
     typeof window !== "undefined" ? sessionStorage.getItem("ur") : null;
 
   const routeType = userRole !== null ? userRole : 0;
-  console.log(routeType,"routeType")
 
   const router = useRoutes(getRoutes(routeType));
-  console.log(router,"router")
 
 
   useEffect(() => {

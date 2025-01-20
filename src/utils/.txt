@@ -1,0 +1,742 @@
+
+// import React, { useEffect, useRef, useState } from 'react';
+// import { Formik, Form, ErrorMessage } from 'formik';
+// import * as Yup from 'yup';
+// import {
+//     Container,
+//     Box,
+//     Typography,
+//     Button,
+//     Grid,
+//     Paper,
+//     FormHelperText,
+//     FormControlLabel,
+//     Checkbox,
+// } from '@mui/material';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { useNavigate } from 'react-router-dom';
+// import { AddNewEmployeeApi } from '../../redux/action/adminAction';
+// import { showToast } from '../Toast/toastServices';
+// import FormikTextField from '../Common/commonTextField';
+
+// const AddNewEmployee = () => {
+//     const dispatch = useDispatch();
+//     const navigate = useNavigate();
+//     const videoRef = useRef(null);
+//     const canvasRef = useRef(null);
+//     const [image, setImage] = useState(null);
+//     const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+//     const { addNewEmployeeDetail } = useSelector((state) => state.admin);
+
+//     const initialValues = {
+//         traineeName: '',
+//         ccNumber: '',
+//         previouslyWorked: false,
+//         previousCcNumber: '',
+//         qualification: '',
+//         branch: '',
+//         designation: '',
+//         yearOfPass: '',
+//         grade: '',
+//         collegeName: '',
+//         joiningDate: '',
+//         photo: null,
+//     };
+
+//     const validationSchema = Yup.object({
+//         traineeName: Yup.string().required('Trainee Name is required'),
+//         ccNumber: Yup.string()
+//             .matches(/^\d+$/, 'CC Number must contain only numbers')
+//             .required('CC Number is required'),
+//         previouslyWorked: Yup.boolean(),
+//         previousCcNumber: Yup.string().when('previouslyWorked', {
+//             is: true,
+//             then: () =>
+//                 Yup.string()
+//                     .matches(/^\d+$/, 'Previous CC Number must contain only numbers')
+//                     .required('Previous CC Number is required'),
+//             otherwise: () => Yup.string(),
+//         }),
+//         qualification: Yup.string().required('Qualification is required'),
+//         branch: Yup.string().required('Branch is required'),
+//         designation: Yup.string().required('Designation is required'),
+//         yearOfPass: Yup.number()
+//             .positive('Year of Pass must be a positive number')
+//             .integer('Year of Pass must be an integer')
+//             .required('Year of Pass is required'),
+//         grade: Yup.string().required('Grade is required'),
+//         joiningDate: Yup.date().required('Joining Date is required'),
+//         collegeName: Yup.string().required('College Name is required'),
+//         photo: Yup.mixed()
+//             .nullable()
+//             .required('Photo is required')
+//             .test('fileType', 'Only image files are allowed', (value) =>
+//                 value ? ['image/jpeg', 'image/png', 'image/jpg'].includes(value.type) : true
+//             )
+//             .test('fileSize', 'File size must be less than 2MB', (value) =>
+//                 value ? value.size <= 2 * 1024 * 1024 : true
+//             ),
+//     });
+
+//     const convertToBase64 = (file) => {
+//         return new Promise((resolve, reject) => {
+//             const reader = new FileReader();
+//             reader.readAsDataURL(file);
+//             reader.onload = () => resolve(reader.result);
+//             reader.onerror = (error) => reject(error);
+//         });
+//     };
+
+//     const handleSubmit = async (values) => {
+//         try {
+//             const photoBase64 = values.photo ? await convertToBase64(values.photo) : null;
+//             const payload = {
+//                 train: [
+//                     {
+//                         name: values.traineeName,
+//                         cc_no: values.ccNumber,
+//                         previous_cc_no: values.previouslyWorked ? values.previousCcNumber : null,
+//                         previously_worked: values.previouslyWorked,
+//                         Designation: values.designation,
+//                         date_of_joining: values.joiningDate,
+//                         grade: values.grade,
+//                         year_passed_out: values.yearOfPass,
+//                         qualification: values.qualification,
+//                         Branch: values.branch,
+//                         college_name: values.collegeName,
+//                         photo: photoBase64,
+//                     },
+//                 ],
+//             };
+//             await dispatch(AddNewEmployeeApi(payload));
+//         } catch (error) {
+//             console.error('Error submitting employee data:', error);
+//             showToast('An unexpected error occurred. Please try again.', 'error');
+//         }
+//     };
+
+//     useEffect(() => {
+//         if (addNewEmployeeDetail) {
+//             if (addNewEmployeeDetail?.status === 'Success') {
+//                 showToast(
+//                     addNewEmployeeDetail?.message || 'Employee registered successfully!',
+//                     'success'
+//                 );
+//                 navigate('/adminDashboard/home');
+//             } else if (addNewEmployeeDetail?.status === 'Failed') {
+//                 showToast(
+//                     addNewEmployeeDetail?.message || 'Failed to register the employee. Please try again.',
+//                     'error'
+//                 );
+//             }
+//         }
+//     }, [addNewEmployeeDetail, navigate]);
+
+//     const handleFileUpload = (e) => {
+//         const file = e.target.files[0];
+//         if (file) {
+//             const reader = new FileReader();
+//             reader.onload = () => {
+//                 setImage(reader.result);
+//             };
+//             reader.readAsDataURL(file);
+//         }
+//     };
+
+//     const handleOpenCamera = async () => {
+//         setIsCameraOpen(true);
+//         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+//         videoRef.current.srcObject = stream;
+//         videoRef.current.play();
+//     };
+
+//     const handleCapturePhoto = () => {
+//         const canvas = canvasRef.current;
+//         const video = videoRef.current;
+//         const context = canvas.getContext('2d');
+//         canvas.width = video.videoWidth;
+//         canvas.height = video.videoHeight;
+//         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+//         const capturedImage = canvas.toDataURL('image/png');
+//         setImage(capturedImage);
+
+//         const stream = video.srcObject;
+//         const tracks = stream.getTracks();
+//         tracks.forEach((track) => track.stop());
+//         setIsCameraOpen(false);
+//     };
+
+//     return (
+//         <Container maxWidth="md">
+//             <Paper elevation={3} sx={{ mt: 4, p: 3, borderRadius: 2 }}>
+//                 <Box mb={3}>
+//                     <Typography variant="h5" align="center" gutterBottom>
+//                         Add New Employee
+//                     </Typography>
+//                 </Box>
+//                 <Formik
+//                     initialValues={initialValues}
+//                     validationSchema={validationSchema}
+//                     onSubmit={handleSubmit}
+//                 >
+//                     {({ setFieldValue, values }) => (
+//                         <Form>
+//                             <Grid container spacing={2}>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="traineeName" label="Trainee Name" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="ccNumber" label="CC Number" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="designation" label="Designation" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="qualification" label="Qualification" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="branch" label="Branch" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="collegeName" label="College Name" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField
+//                                         name="yearOfPass"
+//                                         label="Year of Pass"
+//                                         type="number"
+//                                     />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField
+//                                         name="joiningDate"
+//                                         label="Joining Date"
+//                                         type="date"
+//                                         InputLabelProps={{ shrink: true }}
+//                                     />
+//                                 </Grid>
+//                                 <Grid item xs={12}>
+//                                     <FormControlLabel
+//                                         control={
+//                                             <Checkbox
+//                                                 checked={values.previouslyWorked}
+//                                                 onChange={(e) =>
+//                                                     setFieldValue('previouslyWorked', e.target.checked)
+//                                                 }
+//                                             />
+//                                         }
+//                                         label="Have you worked here before?"
+//                                     />
+//                                 </Grid>
+//                                 {values.previouslyWorked && (
+//                                     <Grid item xs={12}>
+//                                         <FormikTextField
+//                                             name="previousCcNumber"
+//                                             label="Previous CC Number"
+//                                         />
+//                                     </Grid>
+//                                 )}
+//                                 <Grid item xs={12}>
+//                                     <Button
+//                                         variant="contained"
+//                                         component="label"
+//                                         sx={{ mr: 2 }}
+//                                     >
+//                                         Upload Photo
+//                                         <input
+//                                             type="file"
+//                                             accept="image/*"
+//                                             hidden
+//                                             onChange={(e) => setFieldValue('photo', e.target.files[0])}
+//                                         />
+//                                     </Button>
+//                                     {image && <img src={image} alt="Preview" width="150" />}
+//                                     <ErrorMessage
+//                                         name="photo"
+//                                         component={FormHelperText}
+//                                         sx={{ color: 'error.main' }}
+//                                     />
+//                                 </Grid>
+//                                 <Grid item xs={12}>
+//                                     {isCameraOpen ? (
+//                                         <>
+//                                             <video ref={videoRef} style={{ width: '100%' }} />
+//                                             <Button
+//                                                 variant="contained"
+//                                                 color="primary"
+//                                                 onClick={handleCapturePhoto}
+//                                             >
+//                                                 Capture
+//                                             </Button>
+//                                         </>
+//                                     ) : (
+//                                         <Button
+//                                             variant="contained"
+//                                             color="secondary"
+//                                             onClick={handleOpenCamera}
+//                                         >
+//                                             Open Camera
+//                                         </Button>
+//                                     )}
+//                                     <canvas ref={canvasRef} style={{ display: 'none' }} />
+//                                 </Grid>
+//                                 <Grid item xs={12}>
+//                                     <Button
+//                                         variant="contained"
+//                                         type="submit"
+//                                         color="success"
+//                                         fullWidth
+//                                     >
+//                                         Submit
+//                                     </Button>
+//                                 </Grid>
+//                             </Grid>
+//                         </Form>
+//                     )}
+//                 </Formik>
+//             </Paper>
+//         </Container>
+//     );
+// };
+
+// export default AddNewEmployee;
+
+
+
+
+
+
+// import React, { useEffect, useRef, useState } from 'react';
+// import { Formik, Form, ErrorMessage } from 'formik';
+// import * as Yup from 'yup';
+// import {
+//     Container,
+//     Box,
+//     Typography,
+//     Button,
+//     Grid,
+//     Paper,
+//     FormHelperText,
+//     FormControlLabel,
+//     Checkbox
+// } from '@mui/material';
+// import FormikTextField from '../Common/commonTextField';
+// import { AddNewEmployeeApi } from '../../redux/action/adminAction';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { showToast } from '../Toast/toastServices';
+// import { useNavigate } from 'react-router-dom';
+// import { Camera, Upload, X } from 'lucide-react';
+
+// const AddNewEmployee = () => {
+
+//     const dispatch = useDispatch()
+//     const navigate = useNavigate()
+//     const videoRef = useRef(null);
+//     const [stream, setStream] = useState(null);
+//     const [imagePreview, setImagePreview] = useState(null);
+//     const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+//     const { addNewEmployeeDetail } = useSelector((state) => state.admin);
+
+//     const initialValues = {
+//         traineeName: '',
+//         ccNumber: '',
+//         previouslyWorked: false,
+//         previousCcNumber: '',
+//         qualification: '',
+//         branch: "",
+//         designation: '',
+//         yearOfPass: '',
+//         grade: '',
+//         collegeName: "",
+//         joiningDate: '',
+//         photo: null,
+//     };
+
+//     const validationSchema = Yup.object({
+//         traineeName: Yup.string().required('Trainee Name is required'),
+//         ccNumber: Yup.string().matches(/^\d+$/, "CC Number must contain only numbers")
+//             .required('CC Number is required'),
+//         previouslyWorked: Yup.boolean(),
+//         previousCcNumber: Yup.string().when('previouslyWorked', {
+//             is: true,
+//             then: () => Yup.string()
+//                 .matches(/^\d+$/, "Previous CC Number must contain only numbers")
+//                 .required('Previous CC Number is required'),
+//             otherwise: () => Yup.string()
+//         }),
+//         qualification: Yup.string().required('Qualification is required'),
+//         branch: Yup.string().required('Branch is required'),
+//         designation: Yup.string().required('Designation is required'),
+//         yearOfPass: Yup.number()
+//             .positive('Year of Pass must be a positive number')
+//             .integer('Year of Pass must be an integer')
+//             .required('Year of Pass is required'),
+//         grade: Yup.string().required('Grade is required'),
+//         joiningDate: Yup.date().required('Joining Date is required'),
+//         collegeName: Yup.string().required('College Name is required'),
+//         photo: Yup.mixed()
+//             .nullable()
+//             .required('Photo is required')
+//             .test('fileType', 'Only image files are allowed', (value) => {
+//                 return value && ['image/jpeg', 'image/png', 'image/jpg'].includes(value?.type);
+//             })
+//             .test('fileSize', 'File size must be less than 2MB', (value) => {
+//                 return value && value?.size <= 2 * 1024 * 1024; // 2MB
+//             }),
+//     });
+
+//     const handleFileUpload = (event) => {
+//         const file = event.target.files[0];
+//         if (file) {
+//             if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+//                 console.error('Invalid file type');
+//                 return;
+//             }
+//             if (file.size > 2 * 1024 * 1024) {
+//                 console.error('File too large');
+//                 return;
+//             }
+
+//             const reader = new FileReader();
+//             reader.onloadend = () => {
+//                 setImagePreview(reader.result);
+//                 setFieldValue('photo', file);
+//             };
+//             reader.readAsDataURL(file);
+//         }
+//     };
+
+//     const handleOpenCamera = async () => {
+//         try {
+//             const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+//                 video: { facingMode: 'user' } 
+//             });
+//             videoRef.current.srcObject = mediaStream;
+//             setStream(mediaStream);
+//             setIsCameraOpen(true);
+//             setImagePreview(null);
+//             setFieldValue('photo', null);
+//         } catch (error) {
+//             console.error('Error accessing camera:', error);
+//         }
+//     };
+
+//     const handleCapturePhoto = () => {
+//         const video = videoRef.current;
+//         const canvas = document.createElement('canvas');
+//         canvas.width = video.videoWidth;
+//         canvas.height = video.videoHeight;
+//         const context = canvas.getContext('2d');
+//         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+//         const imageData = canvas.toDataURL('image/jpeg');
+//         setImagePreview(imageData);
+//         setFieldValue('photo', imageData);
+//         handleCloseCamera();
+//     };
+
+//     const handleCloseCamera = () => {
+//         if (stream) {
+//             stream.getTracks().forEach(track => track.stop());
+//             setStream(null);
+//         }
+//         setIsCameraOpen(false);
+//     };
+
+//     const clearImage = () => {
+//         setImagePreview(null);
+//         setFieldValue('photo', null);
+//     };
+
+//     const handleSubmit = async (e) => {
+//         try {
+//             let photoData = e.photo;
+
+//             // If photo is a File object, convert to base64
+//             if (e.photo instanceof File) {
+//                 photoData = await new Promise((resolve) => {
+//                     const reader = new FileReader();
+//                     reader.onloadend = () => resolve(reader.result);
+//                     reader.readAsDataURL(e.photo);
+//                 });
+//             }
+//             // Prepare the payload
+//             const payload = {
+//                 train: [
+//                     {
+//                         name: e.traineeName,
+//                         cc_no: e.ccNumber,
+//                         previous_cc_no: e.previouslyWorked ? e.previousCcNumber : null,
+//                         previously_worked: e.previouslyWorked,
+//                         Designation: e.designation,
+//                         date_of_joining: e.joiningDate,
+//                         grade: e.grade,
+//                         year_passed_out: e.yearOfPass,
+//                         qualification: e.qualification,
+//                         Branch: e.branch,
+//                         college_name: e.collegeName,
+//                         photo: photoData,
+//                     },
+//                 ],
+//             };
+//             // Dispatch the action to add a new employee
+//             await dispatch(AddNewEmployeeApi(payload));
+//         } catch (error) {
+//             console.error("Error submitting employee data:", error);
+//             showToast("An unexpected error occurred. Please try again.", "error");
+//         }
+//     };
+
+//     useEffect(() => {
+//         if (addNewEmployeeDetail) {
+//             if (addNewEmployeeDetail?.status === 'Success') {
+//                 showToast(addNewEmployeeDetail?.message || "Employee registered successfully!", "success");
+//                 navigate("/adminDashboard/home");
+//             } else if (addNewEmployeeDetail?.status === 'Failed') {
+//                 showToast(addNewEmployeeDetail?.message || "Failed to register the employee. Please try again.", "error");
+//             }
+//         }
+//     }, [addNewEmployeeDetail, navigate]);
+//     useEffect(() => {
+//         return () => {
+//             if (stream) {
+//                 stream.getTracks().forEach(track => track.stop());
+//             }
+//         };
+//     }, [stream]);
+
+//     return (
+//         <Container maxWidth="md">
+//             <Paper
+//                 elevation={3}
+//                 sx={{
+//                     mt: 4,
+//                     padding: '20px',
+//                     border: '1px solid #ddd',
+//                     borderRadius: '8px',
+//                     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+//                 }}
+//             >
+//                 <Box my={2}>
+//                     <Typography
+//                         variant="h5"
+//                         align="center"
+//                         sx={{
+//                             fontWeight: 'bold',
+//                             color: 'primary.main',
+//                             textTransform: 'uppercase',
+//                             letterSpacing: '2px',
+//                             mb: 3,
+//                         }}
+//                     >
+//                         Trainees Progress Card
+//                     </Typography>
+//                 </Box>
+//                 <Formik
+//                     initialValues={initialValues}
+//                     validationSchema={validationSchema}
+//                     onSubmit={handleSubmit}
+//                 >
+//                     {({ setFieldValue, values, touched, errors }) => (
+//                         <Form>
+//                             <Grid container spacing={2}>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="traineeName" label="Trainee Name" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="ccNumber" label="CC Number" />
+//                                 </Grid>
+//                                 {/* Rest of the form remains the same */}
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="grade" label="Grade" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="designation" label="Designation" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="qualification" label="Qualification" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField name="branch" label="Branch" />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField
+//                                         name="collegeName"
+//                                         label="College Name"
+//                                         type="text"
+//                                     />
+//                                 </Grid>
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField
+//                                         name="yearOfPass"
+//                                         label="Year of Pass"
+//                                         type="number"
+//                                     />
+//                                 </Grid>
+
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormikTextField
+//                                         name="joiningDate"
+//                                         label="Joining Date"
+//                                         type="date"
+//                                         InputLabelProps={{
+//                                             shrink: true,
+//                                         }}
+//                                     />
+//                                 </Grid>
+
+//                                 <Grid item xs={12} md={6}>
+//                                     <input
+//                                         type="file"
+//                                         accept="image/*"
+//                                         onChange={(event) => setFieldValue('photo', event.currentTarget.files[0])}
+//                                         style={{
+//                                             display: 'block',
+//                                             padding: '10px',
+//                                             border: '1px solid #ccc',
+//                                             borderRadius: '4px',
+//                                             backgroundColor: '#f9f9f9',
+//                                             cursor: 'pointer',
+//                                         }}
+//                                     />
+//                                     <ErrorMessage name="photo" component={FormHelperText} sx={{ color: 'error.main' }} />
+//                                 </Grid>
+
+//                                 <Grid item xs={12}>
+//                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+//                                         {!isCameraOpen && !imagePreview && (
+//                                             <div className="space-x-4">
+//                                                 <input
+//                                                     type="file"
+//                                                     accept="image/*"
+//                                                     id="photo-upload"
+//                                                     onChange={handleFileUpload}
+//                                                     className="hidden"
+//                                                 />
+//                                                 <button
+//                                                     type="button"
+//                                                     onClick={() => document.getElementById('photo-upload').click()}
+//                                                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+//                                                 >
+//                                                     <Upload className="h-5 w-5 mr-2" />
+//                                                     Upload Photo
+//                                                 </button>
+//                                                 <button
+//                                                     type="button"
+//                                                     onClick={handleOpenCamera}
+//                                                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+//                                                 >
+//                                                     <Camera className="h-5 w-5 mr-2" />
+//                                                     Take Photo
+//                                                 </button>
+//                                             </div>
+//                                         )}
+
+//                                         {isCameraOpen && (
+//                                             <div className="relative">
+//                                                 <video
+//                                                     ref={videoRef}
+//                                                     autoPlay
+//                                                     playsInline
+//                                                     className="w-full max-w-md mx-auto rounded-lg"
+//                                                 />
+//                                                 <div className="mt-4 space-x-4">
+//                                                     <button
+//                                                         type="button"
+//                                                         onClick={handleCapturePhoto}
+//                                                         className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+//                                                     >
+//                                                         Capture
+//                                                     </button>
+//                                                     <button
+//                                                         type="button"
+//                                                         onClick={handleCloseCamera}
+//                                                         className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+//                                                     >
+//                                                         Cancel
+//                                                     </button>
+//                                                 </div>
+//                                             </div>
+//                                         )}
+
+//                                         {imagePreview && (
+//                                             <div className="relative inline-block">
+//                                                 <img
+//                                                     src={imagePreview}
+//                                                     alt="Preview"
+//                                                     className="max-w-full max-h-64 rounded-lg"
+//                                                 />
+//                                                 <button
+//                                                     type="button"
+//                                                     onClick={clearImage}
+//                                                     className="absolute -top-2 -right-2 p-1 bg-white rounded-full shadow-lg"
+//                                                 >
+//                                                     <X className="h-5 w-5 text-gray-500" />
+//                                                 </button>
+//                                             </div>
+//                                         )}
+
+//                                         {errors.photo && (
+//                                             <div className="text-red-500 text-sm mt-2">
+//                                                 {errors.photo}
+//                                             </div>
+//                                         )}
+//                                     </div>
+//                                 </Grid>
+//                                 {/* New checkbox for previous work experience */}
+//                                 <Grid item xs={12} md={6}>
+//                                     <FormControlLabel
+//                                         control={
+//                                             <Checkbox
+//                                                 checked={values.previouslyWorked}
+//                                                 onChange={(e) => {
+//                                                     setFieldValue('previouslyWorked', e.target.checked);
+//                                                     // Clear previous CC number if unchecked
+//                                                     if (!e.target.checked) {
+//                                                         setFieldValue('previousCcNumber', '');
+//                                                     }
+//                                                 }}
+//                                                 color="primary"
+//                                             />
+//                                         }
+//                                         label="Have you worked at Lucas TVS before?"
+//                                     />
+//                                 </Grid>
+
+//                                 {/* Conditional Previous CC Number field */}
+//                                 {values.previouslyWorked && (
+//                                     <Grid item xs={12} md={6}>
+//                                         <FormikTextField
+//                                             name="previousCcNumber"
+//                                             label="Previous CC Number"
+//                                             helperText="Please enter your previous CC Number"
+//                                         />
+//                                     </Grid>
+//                                 )}
+//                             </Grid>
+//                             <Box mt={3}>
+//                                 <Button
+//                                     type="submit"
+//                                     variant="contained"
+//                                     color="primary"
+//                                     fullWidth
+//                                     sx={{
+//                                         padding: '10px 0',
+//                                         fontWeight: 'bold',
+//                                         letterSpacing: '1px',
+//                                     }}
+//                                 >
+//                                     Register New Trainee
+//                                 </Button>
+//                             </Box>
+//                         </Form>
+//                     )}
+//                 </Formik>
+//             </Paper>
+//         </Container>
+//     );
+// };
+
+// export default AddNewEmployee;

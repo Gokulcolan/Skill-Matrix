@@ -1,6 +1,6 @@
 // redux/actions/userActions.js
 import { Apiservice } from "../api/apiService";
-import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateEmployeeDetailReducer } from "../slice/adminSlice";
+import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateCycleTimeReducer, updateEmployeeDetailReducer, updateMemoryTestReducer } from "../slice/adminSlice";
 
 // let loadingCounter = 0;
 // console.log(loadingCounter, "loadingCounter")
@@ -58,6 +58,14 @@ export function updateEmployeDetailApi(payload) {
 
 export function updateCycleGamesApi(payload) {
   return apiHelper(updateCycleGamesReducer, "POST", "/Cycle_games_up_in", payload);
+}
+
+export function updateMemoryTestApi(payload) {
+  return apiHelper(updateMemoryTestReducer, "POST", "/memory_table_up_in", payload);
+}
+
+export function updateCycleTimeAchievementApi(payload) {
+  return apiHelper(updateCycleTimeReducer, "POST", "/cycle_time_achievement", payload);
 }
 
 export function signVerifyApi(payload) {

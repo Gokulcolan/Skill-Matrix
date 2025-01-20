@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Table,
     TableBody,
@@ -12,10 +12,15 @@ import {
     Button,
     tableCellClasses,
 } from "@mui/material";
-import { styled } from "@mui/system";
+import { Box, styled } from "@mui/system";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCycleGamesApi } from "../../redux/action/adminAction";
 import { showToast } from "../Toast/toastServices";
+import SignPopup from "../Modal/signVerify";
+import Loader from "../Loader/Loader";
+import CustomTextField from "../Common/customTextField";
+import CommonDropdown from "../Common/commonDropDown";
+import { status } from "../../utils/constants/tableDatas";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -45,19 +50,21 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-const CycleTimeGamesTable = ({ data, cc }) => {
-
-    const dispatch = useDispatch();
+const CycleTimeGamesTable = ({ data, cc, date, place }) => {
     
+    const [open, setOpen] = useState(false);
+    const [assessmentData, setAssessmentData] = useState([]);
+    const [loading, setLoading] = useState(false);
+
     const { updateCycleGamesDetail } = useSelector((state) => state.admin);
 
-    const [assessmentData, setAssessmentData] = useState([]);
-    
+    const dispatch = useDispatch();
+    const isFirstRender = useRef(true);
+    const previousDetail = useRef(null);
 
     useEffect(() => {
 
         if (data && data.length > 0) {
-
             const transformedData = data.map((exercise) => {
                 // Mapping attempts with defaults if missing
                 const attemptsArray = exercise.attempts.map((attempt) => ({
@@ -66,7 +73,6 @@ const CycleTimeGamesTable = ({ data, cc }) => {
                     mistakes: attempt.mistakes || "",
                     cycle_time: attempt.cycle_time || "",
                 }));
-
                 return {
                     ...exercise,
                     attempts: attemptsArray,
@@ -98,7 +104,7 @@ const CycleTimeGamesTable = ({ data, cc }) => {
         });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const payload = {
             Cycle_games: assessmentData.map((exercise) => ({
                 task_id: exercise.task_id,
@@ -114,143 +120,217 @@ const CycleTimeGamesTable = ({ data, cc }) => {
                 },
             })),
             cc_no: cc,
+            date: date,
+            place: place,
         };
-        console.log(payload, "Payload for API");
-        dispatch(updateCycleGamesApi(payload));
+        // dispatch(updateCycleGamesApi(payload));
+        setLoading(true);
+        try {
+            await dispatch(updateCycleGamesApi(payload));
+        } catch (error) {
+            console.error("Error saving data:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
+    // useEffect(() => {
+    //     if (updateCycleGamesDetail?.Status === 'success') {
+    //         showToast(updateCycleGamesDetail?.Message, "success");
+    //         setLoading(false);
+    //     } else if (updateCycleGamesDetail?.Status === 'fail') {
+    //         showToast(updateCycleGamesDetail?.Message, "error");
+    //         setLoading(false);
+    //     }
+    // }, [updateCycleGamesDetail]);
+
+    // Show toast messages based on API response
     useEffect(() => {
-        if (updateCycleGamesDetail?.Status === 'success') {
-            showToast(updateCycleGamesDetail?.Messege, "success");
-        } else if (updateCycleGamesDetail?.Status === 'error') {
-            showToast("Failed to register the employee. Please try again.", "error");
+
+        if (isFirstRender.current) {
+            isFirstRender.current = false; // Set to false after the first render
+            previousDetail.current = updateCycleGamesDetail; // Set initial value
+            return; // Skip showing toast on the first render
+        }
+
+        // Show toast only if updateEmployeeDetail has changed
+        if (
+            updateCycleGamesDetail &&
+            updateCycleGamesDetail !== previousDetail.current
+        ) {
+            previousDetail.current = updateCycleGamesDetail; // Update the previous value
+            if (updateCycleGamesDetail?.Status === "success") {
+                showToast(updateCycleGamesDetail?.Message, "success");
+                setLoading(false);
+            } else if (updateCycleGamesDetail?.Status === "fail") {
+                showToast(updateCycleGamesDetail?.Message, "error");
+                setLoading(false);
+            }
         }
     }, [updateCycleGamesDetail]);
 
-    return (
-        <TableContainer component={Paper} sx={{ mt: 2, mb: 2 }}>
-            <Table stickyHeader>
-                <TableHead>
-                    <TableRow>
-                        <StyledTableCell rowSpan={2}>Exercise Name</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>Default Cycle Time</StyledTableCell>
-                        <StyledTableCell colSpan={5}>Skill Assessment (Attempts)</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>Status</StyledTableCell>
-                    </TableRow>
-                    <TableRow>
-                        {[1, 2, 3, 4, 5].map((attempt) => (
-                            <StyledTableCell key={attempt}>{`Attempt ${attempt}`}</StyledTableCell>
-                        ))}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {assessmentData.map((exercise, index) => (
-                        <StyledTableRow key={index}>
-                            <StyledTableCell>{exercise?.name}</StyledTableCell>
-                            <StyledTableCell>{exercise.dct || "-"}</StyledTableCell>
-                            {exercise.attempts.map((attempt, attemptIndex) => (
-                                <StyledTableCell key={attemptIndex}>
-                                    <div>
-                                        <select
-                                            value={attempt.pf_status}
-                                            onChange={(e) =>
-                                                handleValueChange(index, "pf_status", attemptIndex, e.target.value)
-                                            }
-                                            className="field-drop-style"
-                                        >
-                                            <option value="">Select Status</option>
-                                            <option value="Pass">Pass</option>
-                                            <option value="Fail">Fail</option>
-                                        </select>
+    const handleSignVerify = () => {
+        setOpen(true);
+    };
 
-                                        <input
-                                            type="number"
-                                            placeholder="Mistakes"
-                                            value={attempt.mistakes}
-                                            onChange={(e) =>
-                                                handleValueChange(index, "mistakes", attemptIndex, e.target.value)
-                                            }
+    const handleSaveSignature = (signatureData) => {
+        const updatedData = [...assessmentData];
+        updatedData[0].signByTrainee = signatureData; // Update the specific field
+        setAssessmentData(updatedData); // Ensure `setAssessmentData` updates state
+        // setTableData(signatureData);
+        setOpen(false);
+    };
+
+
+    return (
+        <div>
+
+            {loading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+                    <Loader />
+                </Box>
+            ) : (
+                <TableContainer component={Paper} sx={{ mt: 2, mb: 2 }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <StyledTableCell rowSpan={2}>Exercise Name</StyledTableCell>
+                                <StyledTableCell rowSpan={2}>DCT</StyledTableCell>
+                                <StyledTableCell colSpan={5}>Skill Assessment (Attempts)</StyledTableCell>
+                                <StyledTableCell rowSpan={2}>Status</StyledTableCell>
+                            </TableRow>
+                            <TableRow>
+                                {[1, 2, 3, 4, 5].map((attempt) => (
+                                    <StyledTableCell key={attempt}>{`Attempt ${attempt}`}</StyledTableCell>
+                                ))}
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {assessmentData.map((exercise, index) => (
+                                <StyledTableRow key={index}>
+                                    <StyledTableCell>{exercise?.name}</StyledTableCell>
+                                    <StyledTableCell>{exercise.dct || "-"}</StyledTableCell>
+                                    {exercise.attempts.map((attempt, attemptIndex) => (
+                                        <StyledTableCell key={attemptIndex}>
+                                            <div>
+                                                <CommonDropdown
+                                                    label="Status"
+                                                    value={attempt.pf_status}
+                                                    options={status}
+                                                    size="small"
+                                                    onChange={(value) => handleValueChange(index, "pf_status", attemptIndex, value)}
+                                                    className="field-style"
+                                                />
+                                                <CustomTextField
+                                                    placeholder="Mistakes"
+                                                    label="Mistakes"
+                                                    value={attempt.mistakes}
+                                                    onChange={(e) =>
+                                                        handleValueChange(index, "mistakes", attemptIndex, e.target.value)
+                                                    }
+                                                    size="small"
+                                                    className="field-style2"
+                                                />
+                                                <CustomTextField
+                                                    placeholder="Cycle Time"
+                                                    label="Cycle Time"
+                                                    value={attempt.cycle_time}
+                                                    onChange={(e) =>
+                                                        handleValueChange(index, "cycle_time", attemptIndex, e.target.value)
+                                                    }
+                                                    className="field-style2"
+                                                    size="small"
+                                                />
+
+                                            </div>
+                                        </StyledTableCell>
+                                    ))}
+                                    <StyledTableCell>
+                                        <CommonDropdown
+                                            label="Status"
+                                            value={exercise.status_}
+                                            options={status}
+                                            size="small"
+                                            onChange={(value) => handleValueChange(index, "status_", null, value)}  // Directly pass the value
                                             className="field-style"
                                         />
-                                        <input
-                                            type="text"
-                                            placeholder="Cycle Time"
-                                            value={attempt.cycle_time}
-                                            onChange={(e) =>
-                                                handleValueChange(index, "cycle_time", attemptIndex, e.target.value)
-                                            }
-                                            className="field-style"
-                                        />
+                                    </StyledTableCell>
+                                </StyledTableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <StyledTableCell>Signature by Trainee</StyledTableCell>
+                                <StyledTableCell colSpan={2}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                                        {assessmentData[0]?.signByTrainee ? (
+                                            <img
+                                                src={
+                                                    typeof assessmentData[0]?.signByTrainee === "string" &&
+                                                        (assessmentData[0]?.signByTrainee.startsWith("http") ||
+                                                            assessmentData[0]?.signByTrainee.startsWith("data:image"))
+                                                        ? assessmentData[0]?.signByTrainee
+                                                        : "https://via.placeholder.com/150"
+                                                }
+                                                alt="Profile"
+                                                className="signature-img-cycle"
+                                            // style={{ width: "100px", height: "40px", objectFit: "cover", borderRadius: "4px" }}
+                                            />
+                                        ) : (
+                                            ""
+                                        )}
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => handleSignVerify()}
+                                            sx={{ backgroundColor: "white" }}
+                                        >
+                                            Click here to Sign
+                                        </Button>
                                     </div>
                                 </StyledTableCell>
-                            ))}
-                            <StyledTableCell>
-                                <select
-                                    value={exercise.status_}
-                                    onChange={(e) =>
-                                        handleValueChange(index, "status_", null, e.target.value)
-                                    }
-                                    className="field-drop-style"
-                                >
-                                    <option value="">Select Status</option>
-                                    <option value="Pass">Pass</option>
-                                    <option value="Fail">Fail</option>
-                                </select>
-                            </StyledTableCell>
-                        </StyledTableRow>
-                    ))}
-                </TableBody>
-
-                <TableFooter>
-                    <TableRow>
-                        <StyledTableCell>Signature by Trainee</StyledTableCell>
-                        <StyledTableCell colSpan={2}>
-                            <input
-                                type="text"
-                                value={assessmentData[0]?.signByTrainee}
-
-                                onChange={(e) =>
-                                    handleValueChange(0, "signByTrainee", null, e.target.value)
-                                }
-                                className="w-full p-1 text-center border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </StyledTableCell>
-                        <StyledTableCell>Signature by Process Coach</StyledTableCell>
-                        <StyledTableCell colSpan={2}>
-                            <input
-                                type="text"
-                                value={assessmentData[0]?.signByProcessCoach}
-                                onChange={(e) =>
-                                    handleValueChange(0, "signByProcessCoach", null, e.target.value)
-                                }
-                                className="w-full p-1 text-center border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </StyledTableCell>
-                        <StyledTableCell>Signature by Training Officer</StyledTableCell>
-                        <StyledTableCell colSpan={2}>
-                            <input
-                                type="text"
-                                value={assessmentData[0]?.signByTrainingOfficer}
-                                onChange={(e) =>
-                                    handleValueChange(0, "signByTrainingOfficer", null, e.target.value)
-                                }
-                                className="w-full p-1 text-center border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </StyledTableCell>
-                    </TableRow>
-                </TableFooter>
-
-            </Table>
-            <br />
-            <Button
-                variant="contained"
-                color="success"
-                sx={{ marginBottom: "16px" }}
-                onClick={handleSave}
-            >
-                Save
-            </Button>
-        </TableContainer>
+                                <StyledTableCell>Signature by Process Coach</StyledTableCell>
+                                <StyledTableCell colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={assessmentData[0]?.signByProcessCoach}
+                                        onChange={(e) =>
+                                            handleValueChange(0, "signByProcessCoach", null, e.target.value)
+                                        }
+                                        className="field-style"
+                                    />
+                                </StyledTableCell>
+                                <StyledTableCell>Signature by Training Officer</StyledTableCell>
+                                <StyledTableCell colSpan={2}>
+                                    <input
+                                        type="text"
+                                        value={assessmentData[0]?.signByTrainingOfficer}
+                                        onChange={(e) =>
+                                            handleValueChange(0, "signByTrainingOfficer", null, e.target.value)
+                                        }
+                                        className="field-style"
+                                    />
+                                </StyledTableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                    <br />
+                    <Button
+                        variant="contained"
+                        color="success"
+                        sx={{ marginBottom: "16px" }}
+                        onClick={handleSave}
+                        disabled={loading}
+                    >
+                        {loading ? "Saving..." : "Save"}
+                    </Button>
+                    <SignPopup
+                        openModal={open}
+                        setOpenModal={() => setOpen(false)}
+                        onSave={handleSaveSignature}
+                    />
+                </TableContainer>
+            )}
+        </div>
     );
 };
 

@@ -1,34 +1,43 @@
 import { Box, Button, Typography } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { EmployeeListHead } from '../../../utils/constants/tableDatas'
-import {  useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import SearchIcon from '@mui/icons-material/Search';
 import EmployeeTableList from '../../../Components/EmployeeList/employeeTableList'
 import { useDispatch, useSelector } from 'react-redux'
 import { getAllEmployeeDetailsApi } from '../../../redux/action/adminAction'
 import CustomTextField from '../../../Components/Common/customTextField'
+import Loader from '../../../Components/Loader/Loader';
 
 const Home = () => {
 
     const { getAllEmployeeDetail } = useSelector((state) => state.admin);
     const [searchInput, setSearchInput] = useState(""); // State for search input
     const [filteredData, setFilteredData] = useState([]); // State for filtered data
+    const [loading, setLoading] = useState(true);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handleNewEmployee = () => {
-        console.log("test check")
         navigate("/adminDashboard/addNewEmployee");
     };
 
     useEffect(() => {
         dispatch(getAllEmployeeDetailsApi()); // Fetch fresh data
+        setLoading(true);
     }, [dispatch]);
 
+    // useEffect(() => {
+    //     // Synchronize filtered data with full data when data changes
+    //     setFilteredData(getAllEmployeeDetail?.Full_table || []);
+    // }, [getAllEmployeeDetail]);
+
     useEffect(() => {
-        // Synchronize filtered data with full data when data changes
-        setFilteredData(getAllEmployeeDetail?.Full_table || []);
+        if (getAllEmployeeDetail) {
+            setFilteredData(getAllEmployeeDetail?.Full_table || []);
+            setLoading(false);
+        }
     }, [getAllEmployeeDetail]);
 
     const handleSearch = () => {
@@ -52,7 +61,9 @@ const Home = () => {
     };
 
     return (
+
         <div>
+
             <Box sx={{ textAlign: "center", marginTop: "30px" }} className="bg-img">
                 <Typography
                     variant="h3"
@@ -76,12 +87,15 @@ const Home = () => {
                     Empowering Trainees for Success.
                 </Typography>
             </Box>
+
             <br />
+
             <Box sx={{ display: "flex", justifyContent: "space-between", padding: "5px 40px" }}>
                 <div>
                     <h2>Employee List</h2>
                 </div>
             </Box>
+
             <Box sx={{ padding: "0px 40px" }}>
                 <div className="search-container1">
                     <div>
@@ -119,10 +133,20 @@ const Home = () => {
                     </div>
                 </div>
             </Box>
-            <Box className="tablePad">
+
+            {/* <Box className="tablePad">
                 <EmployeeTableList columns={EmployeeListHead} data={filteredData} />
+            </Box> */}
+            <Box className="tablePad">
+                {loading ? (
+                    <Loader /> // Replace with your loader component
+                ) : (
+                    <EmployeeTableList columns={EmployeeListHead} data={filteredData} />
+                )}
             </Box>
+
         </div>
+
     );
 };
 

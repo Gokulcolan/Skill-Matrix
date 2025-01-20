@@ -39,30 +39,30 @@ export const SafetyTrainingHead = [
 export const SafetyTrainingValues = [
   {
     topic: "About Lucas TVS (Customers/Products/Policies)",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     // finalStatus: "",
     si_no: 1,
     // id: "about_ltvs"
   },
   {
     topic: "Work Discipline (Including Uniform, Working Safety Shoes, Attendance/Discipline, Shift Times, Punctuality)",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 2,
     // id: "work_discipline"
   },
   {
     topic: "Industrial Safety Training",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 3,
     // id: "safety_training"
   },
   {
     topic: "Awareness of Quality",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 4,
     // id: "quality"
   },
@@ -75,29 +75,29 @@ export const SafetyTrainingValues = [
   },
   {
     topic: "5 S & 3M Practices",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 6,
     // id: "practices"
   },
   {
     topic: "OHSAS & EMS",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 7,
     // id: "ems"
   },
   {
     topic: "Product Knowledge (Basic Level)",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 8,
     // id: "product_knowledge"
   },
   {
     topic: "Fire Safety & Electrical Safety",
-    totalScore: "50",
-    targetScore: ">40",
+    totalScore: "",
+    targetScore: "",
     si_no: 9,
     // id: "fire_electrical"
   }
@@ -113,8 +113,14 @@ export const SafetyTrainingValues = [
 export const DaysFilter = [
   { value: 10, label: "DAY 1 - 3" },
   { value: 20, label: "DAY 4" },
-  { value: 30, label: "DAY 5 First OFF" },
-  { value: 40, label: "DAY 5 Second OFF" },
+  { value: 30, label: "DAY 5 - First Half" },
+  { value: 40, label: "DAY 5 - Second Half" },
+];
+
+export const status = [
+  { value: '', label: 'Select Status' },
+  { value: 'Pass', label: 'Pass' },
+  { value: 'Fail', label: 'Fail' },
 ];
 
 export const CycleGamesExerciseData = [
@@ -125,10 +131,32 @@ export const CycleGamesExerciseData = [
   { name: "5. Process Sequence", dct: "30", task_id: "5" },
   { name: "6. 5S Exercise", dct: "15", task_id: "6" },
   { name: "7. Finger Dexterity", dct: "40", task_id: "7" },
-  { name: "8. Eye and Hand Coordination", dct: "15", task_id: "8" },
+  { name: "8. Eye and Hand Coordination", dct: "16", task_id: "8" },
   { name: "9. Hand Steadiness", dct: "20", task_id: "9" },
   { name: "10. Assemble & Disassemble", dct: "30", task_id: "10" },
 ];
+
+export const MemoryTestData = [
+  { task_id: 1 },
+];
+
+export const CycleTimeAchievement = [
+  { task_id: 1 },
+];
+
+// export const MemoryTestHead = [
+//   { label: "Process Name & Number", id: "topic" },
+//   { label: "My Process Observation", id: "totalScore" },
+//   { label: "Target Score", id: "targetScore" },
+//   { label: "Status", id: "status_" },
+//   { label: "Remarks", id: "Remarks" },
+//   { label: "Skill Assessment (Attempts)", id: "attempt" }
+// ];
+
+
+
+
+
 
 
 

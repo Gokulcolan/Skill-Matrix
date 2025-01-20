@@ -6,7 +6,6 @@ import { SearchEmployeApi } from '../../../redux/action/adminAction';
 import { useDispatch, useSelector } from 'react-redux';
 import { showToast } from '../../../Components/Toast/toastServices';
 import EmployeeDetailsCard from '../../../Components/EmployeeDetails/employeeDetailsCard';
-import { resetEmployeeData } from '../../../redux/slice/adminSlice';
 
 const ProgessDetails = () => {
 
@@ -29,24 +28,34 @@ const ProgessDetails = () => {
             }
         ]
 
-        console.log(payload, "test")
 
         dispatch(SearchEmployeApi(payload))
 
     }
+
+    // useEffect(() => {
+    //     if (searchEmployeeDetail.status === 'success') {
+    //         showToast(searchEmployeeDetail.message, "success");
+    //     }
+    //     elseif(searchEmployeeDetail?.status === 'error') {
+    //         showToast(searchEmployeeDetail.message, "error");
+    //     }
+    //     else{
+    //         ""
+    //     }
+    // }, [searchEmployeeDetail]);
+
     useEffect(() => {
-        if (searchEmployeeDetail) {
-            showToast(searchEmployeeDetail.message, "success");
+        if (searchEmployeeDetail?.status === "success") {
+            showToast(searchEmployeeDetail?.message, "success");
+        } else if (searchEmployeeDetail?.status === "fail") {
+            showToast(searchEmployeeDetail.message, "error");
         }
-        //  else if (addNewEmployeeDetail?.status === 'error') {
-        //     showToast("Failed to register the employee. Please try again.", "error");
-        // }
     }, [searchEmployeeDetail]);
 
     const handleChange = (e) => {
         setInputValue(e.target.value)
     }
-
 
     return (
 
@@ -68,6 +77,7 @@ const ProgessDetails = () => {
             <br />
             <TableFilters employeeTrainingDetails={searchEmployeeDetail} />
         </div>
+
     )
 }
 

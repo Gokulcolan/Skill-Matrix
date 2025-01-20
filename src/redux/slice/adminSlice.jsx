@@ -13,6 +13,10 @@ const adminSlice = createSlice({
     getAllEmployeeDetailIsLoading: false,
     updateCycleGamesDetail: [],
     updateCycleGamesIsLoading: false,
+    updateMemoryTestDetail: [],
+    updateMemoryTestIsLoading: false,
+    updateCycleTimeDetail: [],
+    updateCycleTimeIsLoading: false,
     signVerifyDetail: [],
     signVerifyIsLoading: false
   },
@@ -42,6 +46,16 @@ const adminSlice = createSlice({
       state.updateCycleGamesDetail = apiData;
       state.updateCycleGamesIsLoading = isLoading;
     },
+    updateMemoryTestReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.updateMemoryTestDetail = apiData;
+      state.updateMemoryTestIsLoading = isLoading;
+    },
+    updateCycleTimeReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+      state.updateCycleTimeDetail = apiData;
+      state.updateCycleTimeIsLoading = isLoading;
+    },
     signVerifyReducer: (state, { payload }) => {
       const { apiData, isLoading } = payload;
       state.signVerifyDetail = apiData;
@@ -53,7 +67,7 @@ const adminSlice = createSlice({
   },
 });
 
-export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, signVerifyReducer, resetEmployeeData } = adminSlice.actions;
+export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, updateMemoryTestReducer, updateCycleTimeReducer, signVerifyReducer, resetEmployeeData } = adminSlice.actions;
 
 export const adminSelector = (state) => state.admin;
 export const adminReducer = adminSlice.reducer;
