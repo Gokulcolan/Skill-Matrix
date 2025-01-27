@@ -740,3 +740,337 @@
 // };
 
 // export default AddNewEmployee;
+
+
+
+
+
+
+
+
+
+
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  tableCellClasses,
+  TableFooter,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import { SafetyTrainingHead } from "../../utils/constants/tableDatas";
+import { useDispatch, useSelector } from "react-redux";
+import { updateEmployeDetailApi } from "../../redux/action/adminAction";
+import { showToast } from "../Toast/toastServices";
+import SignPopup from "../Modal/signVerify";
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+  [`&.${tableCellClasses.footer}`]: {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: "rgb(0 0 0 / 4%)",
+  },
+  "&:last-child td, &:last-child th": {
+    border: 0,
+  },
+}));
+
+
+const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place }) => {
+
+  const [tableData, setTableData] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [currentRow, setCurrentRow] = useState(null);
+  const [finalStatus, setFinalStatus] = useState("Pending"); // Add finalStatus to state
+
+  const { updateEmployeeDetail } = useSelector((state) => state.admin);
+
+  const dispatch = useDispatch();
+  const isFirstRender = useRef(true);
+  const previousDetail = useRef(null);
+
+  // Initialize table data from props
+  useEffect(() => {
+    if (initialData) {
+      setTableData(initialData);
+    }
+  }, [initialData]);
+
+
+  // Handle input changes in the table
+  const handleInputChange = (rowIndex, field, value) => {
+    if (field === "actual_score" && isNaN(value)) {
+      return; // Prevent non-numeric input
+    }
+
+    const updatedData = tableData.map((row, index) => {
+      if (index === rowIndex) {
+        const updatedRow = { ...row, [field]: value };
+
+        // Calculate overall score (sum of all actual_score fields in the row)
+        const overallScore = Object.keys(updatedRow)
+          .filter((key) => key.startsWith("actual_score")) // Adjust field prefix if needed
+          .reduce((sum, key) => sum + (Number(updatedRow[key]) || 0), 0);
+
+        // Update status based on the overall score for this row
+        updatedRow.status_ = overallScore >= 40 ? "Pass" : overallScore > 0 ? "Fail" : "Pending";
+
+        return updatedRow;
+      }
+      return row;
+    });
+
+    // Check if the total score across all rows is above 40
+    const totalScoreAcrossRows = updatedData.reduce(
+      (sum, row) => sum + (Number(row.actual_score) || 0),
+      0
+    );
+
+    const calculatedFinalStatus = totalScoreAcrossRows >= 40 ? "Pass" : "Fail"; // Calculate finalStatus
+
+    setFinalStatus(calculatedFinalStatus); // Update finalStatus state
+
+    setTableData(updatedData); // Update the table data state
+    if (onValueChange) onValueChange(updatedData);
+  };
+
+  // Check if a column is editable
+  const isEditable = (columnId) => {
+    return !["topic", "totalScore", "targetScore"].includes(columnId);
+  };
+
+  // Save signature data for the selected row
+  const handleSaveSignature = (signatureData) => {
+    const updatedData = tableData.map((row, index) =>
+      index === currentRow ? { ...row, sign_by_trainee: signatureData } : row
+    );
+    setTableData(updatedData);
+    setCurrentRow(null);
+    setOpen(false);
+  };
+
+  // Save all data
+  const handleSave = () => {
+    const payload = [{
+      Safety_training: tableData,
+      cc_no: cc,
+      date: date,
+      place: place,
+    }];
+    dispatch(updateEmployeDetailApi(payload));
+  };
+
+  // Show toast messages based on API response
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // Set to false after the first render
+      previousDetail.current = updateEmployeeDetail; // Set initial value
+      return; // Skip showing toast on the first render
+    }
+
+    // Show toast only if updateEmployeeDetail has changed
+    if (
+      updateEmployeeDetail &&
+      updateEmployeeDetail !== previousDetail.current
+    ) {
+      previousDetail.current = updateEmployeeDetail; // Update the previous value
+      if (updateEmployeeDetail?.Status === "success") {
+        showToast(updateEmployeeDetail?.Message, "success");
+      } else if (updateEmployeeDetail?.Status === "fail") {
+        showToast(updateEmployeeDetail?.Message, "error");
+      }
+    }
+  }, [updateEmployeeDetail]);
+
+  // Handle sign verification
+  const handleSignVerify = (rowIndex) => {
+    setCurrentRow(rowIndex);
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <TableContainer component={Paper} sx={{ mt: 2, mb: 2 }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              {SafetyTrainingHead.map((column, columnIndex) => (
+                <StyledTableCell key={column.id} align="left" columnIndex={columnIndex}>
+                  {column.label}
+                </StyledTableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {tableData.map((row, rowIndex) => (
+              <StyledTableRow key={rowIndex}>
+                {SafetyTrainingHead.map((column, columnIndex) => (
+                  <StyledTableCell key={column.id} align="left" columnIndex={columnIndex}>
+                    {column.id === "status_" ? (
+                      <span
+                        style={{
+                          color:
+                            row[column.id] === "Pass"
+                              ? "white"
+                              : row[column.id] === "Fail"
+                                ? "white"
+                                : !row[column.id]
+                                  ? "black"
+                                  : "white",
+                          backgroundColor:
+                            row[column.id] === "Pass"
+                              ? "#209b20"
+                              : row[column.id] === "Fail"
+                                ? "red"
+                                : !row[column.id]
+                                  ? "yellow"
+                                  : "red",
+                          fontWeight: "bold",
+                          borderRadius: "4px",
+                        }}
+                        className="field-drop-style"
+                      >
+                        {row[column.id] || "Pending"}
+                      </span>
+                    ) : isEditable(column.id) ? (
+                      <input
+                        className="field-style"
+                        type={column.id === "actual_score" ? "number" : "text"}
+                        value={row[column.id] || ""}
+                        onChange={(e) => handleInputChange(rowIndex, column.id, e.target.value)}
+                      />
+                    ) : (
+                      row[column.id] || ""
+                    )}
+                  </StyledTableCell>
+                ))}
+              </StyledTableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              {/* Status Column */}
+              <StyledTableCell>
+                <div style={{ display: "flex", justifyContent: "space-around" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                    <p>Status</p>
+                    <span
+                      style={{
+                        color:
+                          finalStatus === "Pass"
+                            ? "white"
+                            : finalStatus === "Fail"
+                              ? "white"
+                              : !finalStatus
+                                ? "black"
+                                : "white",
+                        backgroundColor:
+                          finalStatus === "Pass"
+                            ? "green"
+                            : finalStatus === "Fail"
+                              ? "red"
+                              : !finalStatus
+                              ? "yellow"
+                              : "red",
+                        fontWeight: "bold",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                      }}
+                      className="field-drop-style"
+                    >
+                      {finalStatus || "Pending"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                    <p>Remarks</p>
+                    <input
+                      type="text"
+                      value={tableData[0]?.Remarks || ""}
+                      onChange={(e) => handleInputChange(0, "remarks", e.target.value)}
+                      className="field-style"
+                    />
+                  </div>
+                </div>
+              </StyledTableCell>
+              {/* Signatures Columns */}
+              <StyledTableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Signature by Trainee</p>
+                  <div >
+                    {tableData[0]?.sign_by_trainee ? (
+                      <img
+                        src={
+                          tableData[0]?.sign_by_trainee.startsWith("http") ||
+                            tableData[0]?.sign_by_trainee.startsWith("data:image")
+                            ? tableData[0]?.sign_by_trainee
+                            : "https://via.placeholder.com/150"
+                        }
+                        alt="Trainee Signature"
+                        className="signature-img-cycle"
+                      />
+                    ) : (
+                      <Button variant="outlined" onClick={() => handleSignVerify(0)} sx={{ backgroundColor: "white" }}>
+                        Click here to Sign
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </StyledTableCell>
+              <StyledTableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Signature by Training Officer</p>
+                  <input
+                    type="text"
+                    value={tableData[0]?.sign_by_training_officer || ""}
+                    onChange={(e) => handleInputChange(0, "sign_by_training_officer", e.target.value)}
+                    className="field-style"
+                  />
+                </div>
+              </StyledTableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Button
+            variant="contained"
+            color="success"
+            sx={{ margin: "16px 0" }}
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        </div>
+      </TableContainer>
+
+      <SignPopup
+        openModal={open}
+        setOpenModal={() => setOpen(false)}
+        onSave={handleSaveSignature}
+      />
+
+    </>
+  );
+};
+
+export default SafetyTrainingTable;

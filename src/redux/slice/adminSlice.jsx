@@ -18,7 +18,9 @@ const adminSlice = createSlice({
     updateCycleTimeDetail: [],
     updateCycleTimeIsLoading: false,
     signVerifyDetail: [],
-    signVerifyIsLoading: false
+    signVerifyIsLoading: false,
+    generateQRDetail: [],
+    generateQRIsLoading: [],
   },
   reducers: {
     addNewEmployeeReducer: (state, { payload }) => {
@@ -61,13 +63,24 @@ const adminSlice = createSlice({
       state.signVerifyDetail = apiData;
       state.signVerifyIsLoading = isLoading;
     },
+    generateQRReducer: (state, { payload }) => {
+      const { apiData, isLoading } = payload;
+  
+      // Clear the previous data
+      state.generateQRDetail = null;
+  
+      // Set the new data
+      state.generateQRDetail = apiData;
+      state.generateQRIsLoading = isLoading;
+  },
+  
     resetEmployeeData: (state) => {
       state.searchEmployeeDetail = null;
     },
   },
 });
 
-export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, updateMemoryTestReducer, updateCycleTimeReducer, signVerifyReducer, resetEmployeeData } = adminSlice.actions;
+export const { addNewEmployeeReducer, searchEmployeeReducer, updateEmployeeDetailReducer, getAllEmployeeDetailReducer, updateCycleGamesReducer, updateMemoryTestReducer, updateCycleTimeReducer, signVerifyReducer, resetEmployeeData, generateQRReducer } = adminSlice.actions;
 
 export const adminSelector = (state) => state.admin;
 export const adminReducer = adminSlice.reducer;

@@ -1,6 +1,6 @@
 // redux/actions/userActions.js
 import { Apiservice } from "../api/apiService";
-import { addNewEmployeeReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateCycleTimeReducer, updateEmployeeDetailReducer, updateMemoryTestReducer } from "../slice/adminSlice";
+import { addNewEmployeeReducer, generateQRReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateCycleTimeReducer, updateEmployeeDetailReducer, updateMemoryTestReducer } from "../slice/adminSlice";
 
 // let loadingCounter = 0;
 // console.log(loadingCounter, "loadingCounter")
@@ -30,12 +30,10 @@ export function apiHelper(apiReducer, method, apiURL, data = "", Toastmessage = 
     dispatch(apiReducer({ isLoading: true }));
     Apiservice(method, apiURL, data)
       .then((e) => {
-        dispatch(apiReducer({ apiData: e?.data, isLoading: false }));
-
+        dispatch(apiReducer({ apiData: e?.data, isLoading: false, }));
       })
       .catch((e) => {
         dispatch(apiReducer({ isLoading: false }));
-
       });
   };
 }
@@ -70,4 +68,8 @@ export function updateCycleTimeAchievementApi(payload) {
 
 export function signVerifyApi(payload) {
   return apiHelper(signVerifyReducer, "POST", "/mouse_sign", payload);
+}
+
+export function generateQRApi(payload) {
+  return apiHelper(generateQRReducer, "POST", "/QR_generator", payload);
 }

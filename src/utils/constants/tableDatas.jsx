@@ -25,13 +25,13 @@ export const EmployeeListHead = [
 
 export const SafetyTrainingHead = [
   { label: "Topics", id: "topic" },
-  { label: "Total Score", id: "totalScore" },
-  { label: "Target Score", id: "targetScore" },
-  { label: "Actual Score", id: "actual_score" },
-  { label: "Status", id: "status_" },
-  { label: "Sign by Trainee", id: "sign_by_trainee" },
-  { label: "Sign by Training Officer", id: "sign_by_training_officer" },
-  { label: "Remarks", id: "Remarks" },
+  // { label: "Total Score", id: "totalScore" },
+  { label: "Target Score ( 50 )", id: "targetScore" },
+  { label: "Actual Score ( >40 To Pass )", id: "actual_score" },
+  // { label: "Status", id: "status_" },
+  // { label: "Sign by Trainee", id: "sign_by_trainee" },
+  // { label: "Sign by Training Officer", id: "sign_by_training_officer" },
+  // { label: "Remarks", id: "Remarks" },
   // { label: "Final Status", id: "finalStatus" }
 ];
 
@@ -39,65 +39,63 @@ export const SafetyTrainingHead = [
 export const SafetyTrainingValues = [
   {
     topic: "About Lucas TVS (Customers/Products/Policies)",
-    totalScore: "",
-    targetScore: "",
-    // finalStatus: "",
+    
+    targetScore: "5",
     si_no: 1,
-    // id: "about_ltvs"
   },
   {
     topic: "Work Discipline (Including Uniform, Working Safety Shoes, Attendance/Discipline, Shift Times, Punctuality)",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 2,
     // id: "work_discipline"
   },
   {
     topic: "Industrial Safety Training",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 3,
     // id: "safety_training"
   },
   {
     topic: "Awareness of Quality",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 4,
     // id: "quality"
   },
   {
     topic: "SOP - Standard Operating Procedure (System Followed by Operators)",
-    totalScore: "50",
-    targetScore: ">40",
+    // totalScore: "50",
+    targetScore: "10",
     si_no: 5,
     // id: "SOP"
   },
   {
     topic: "5 S & 3M Practices",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 6,
     // id: "practices"
   },
   {
     topic: "OHSAS & EMS",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 7,
     // id: "ems"
   },
   {
     topic: "Product Knowledge (Basic Level)",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 8,
     // id: "product_knowledge"
   },
   {
     topic: "Fire Safety & Electrical Safety",
-    totalScore: "",
-    targetScore: "",
+    // totalScore: "",
+    targetScore: "5",
     si_no: 9,
     // id: "fire_electrical"
   }
@@ -124,9 +122,9 @@ export const status = [
 ];
 
 export const CycleGamesExerciseData = [
-  { name: "1. Spot the Safety Hazard", dct: "", task_id: "1" },
-  { name: "2. Quality Check Exercise", dct: "", task_id: "2" },
-  { name: "3. Poison Cake Test", dct: "", task_id: "3" },
+  { name: "1. Spot the Safety Hazard", dct: "10", task_id: "1" },
+  { name: "2. Quality Check Exercise", dct: "20", task_id: "2" },
+  { name: "3. Poison Cake Test", dct: "10", task_id: "3" },
   { name: "4. Memory Game", dct: "20", task_id: "4" },
   { name: "5. Process Sequence", dct: "30", task_id: "5" },
   { name: "6. 5S Exercise", dct: "15", task_id: "6" },

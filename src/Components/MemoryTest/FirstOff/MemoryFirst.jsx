@@ -48,7 +48,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-const MemoryFirst = ({ data, cc, date ,place }) => {
+const MemoryFirst = ({ data, cc, date, place }) => {
 
     const [open, setOpen] = useState(false);
     const [assessmentData, setAssessmentData] = useState([]);
@@ -83,20 +83,50 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
         }
     }, [data]);
 
+    // const handleValueChange = (exerciseIndex, field, attemptIndex, value) => {
+    //     setAssessmentData((prevData) => {
+    //         const updatedData = [...prevData];
+    //         if (attemptIndex !== null) {
+    //             updatedData[exerciseIndex].attempts[attemptIndex] = {
+    //                 ...updatedData[exerciseIndex].attempts[attemptIndex],
+    //                 [field]: value,
+    //             };
+    //         } else {
+    //             updatedData[exerciseIndex][field] = value;
+    //         }
+    //         return updatedData;
+    //     });
+    // };
+
     const handleValueChange = (exerciseIndex, field, attemptIndex, value) => {
         setAssessmentData((prevData) => {
             const updatedData = [...prevData];
+
             if (attemptIndex !== null) {
+                // Update the specific field for an attempt
                 updatedData[exerciseIndex].attempts[attemptIndex] = {
                     ...updatedData[exerciseIndex].attempts[attemptIndex],
                     [field]: value,
                 };
             } else {
+                // Update a field outside the attempts array
                 updatedData[exerciseIndex][field] = value;
             }
+
+            // Count how many attempts have no mistakes
+            const successfulAttempts = updatedData[exerciseIndex].attempts.filter(
+                (attempt) =>
+                    attempt.mistakes !== undefined &&
+                    attempt.mistakes !== "" &&
+                    parseInt(attempt.mistakes, 10) === 0
+            ).length;
+
+            // Check if at least 2 attempts pass (have zero mistakes)
+            updatedData[exerciseIndex].status_ = successfulAttempts >= 2 ? "Pass" : "Fail";
             return updatedData;
         });
     };
+
 
     const handleSave = () => {
         const payload = {
@@ -164,8 +194,8 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
                     <TableRow>
                         <StyledTableCell rowSpan={2}>Process Name & Number</StyledTableCell>
                         <StyledTableCell rowSpan={2}>My Process Observation</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>Target Score</StyledTableCell>
-                        <StyledTableCell colSpan={5}>Skill Assessment (Attempts)</StyledTableCell>
+                        <StyledTableCell rowSpan={2}>No of Heart Test</StyledTableCell>
+                        <StyledTableCell colSpan={5}>Skill Assessment ( To pass, a minimum of two attempts, starting from zero, is required )</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Status</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Remarks</StyledTableCell>
                     </TableRow>
@@ -181,26 +211,26 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="process Name"
+                                    // placeholder="process Name"
                                     value={exercise?.process_name}
                                     onChange={(e) =>
                                         handleValueChange(index, "process_name", null, e.target.value)
                                     }
-                                    className="field-style"
+                                    className="field-style2"
                                 />
                             </StyledTableCell>
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="Process Observation"
+                                    // placeholder="Process Observation"
                                     value={exercise?.process_observation}
                                     onChange={(e) =>
                                         handleValueChange(index, "process_observation", null, e.target.value)
                                     }
-                                    className="field-style"
+                                    className="field-style2"
                                 />
                             </StyledTableCell>
-                            <StyledTableCell> &gt;93 </StyledTableCell>
+                            <StyledTableCell> 2 </StyledTableCell>
                             {exercise.attempts.map((attempt, attemptIndex) => (
                                 <StyledTableCell key={attemptIndex}>
                                     <div>
@@ -215,7 +245,7 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
                                             size="small"
                                             className="field-style"
                                         />
-                                        <CustomTextField
+                                        {/* <CustomTextField
                                             placeholder="Heart Test"
                                             label="By Heart Test Actual"
                                             value={attempt.heart_test}
@@ -225,19 +255,39 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
                                             // customStyles={inputStyle}
                                             size="small"
                                             className="field-style"
-                                        />
+                                        /> */}
                                     </div>
                                 </StyledTableCell>
                             ))}
                             <StyledTableCell>
-                                <CommonDropdown
+
+                                <span
+                                    style={{
+                                        color: exercise.status_ === "Pass"
+                                            ? "White"  // Green for Pass
+                                            : exercise.status_ === "Fail"
+                                                ? "White"  // Red for Fail
+                                                : "Black", // Golden Yellow for Pending
+                                        fontWeight: "bold",
+                                        backgroundColor: exercise.status_ === "Pass"
+                                            ? "#28a745"  // Green background for Pass
+                                            : exercise.status_ === "Fail"
+                                                ? "#dc3545"  // Red background for Fail
+                                                : "#FFEB3B", // Vivid Yellow background for Pending
+                                        padding: "5px 10px",  // Adding some padding for better readability
+                                        borderRadius: "4px",  // Rounded corners for the status
+                                    }}
+                                >
+                                    {exercise.status_ || "Pending"}
+                                </span>
+                                {/* <CommonDropdown
                                     label="Status"
                                     value={exercise.status_}
                                     options={status}
                                     size="small"
                                     onChange={(value) => handleValueChange(index, "status_", null, value)}  // Directly pass the value
                                     className="field-style"
-                                />
+                                /> */}
                                 {/* <select
                                     value={exercise.status_}
                                     onChange={(e) =>
@@ -253,7 +303,7 @@ const MemoryFirst = ({ data, cc, date ,place }) => {
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="Remarks"
+                                    // placeholder="Remarks"
                                     value={exercise.remarks}
                                     onChange={(e) =>
                                         handleValueChange(index, "remarks", null, e.target.value)

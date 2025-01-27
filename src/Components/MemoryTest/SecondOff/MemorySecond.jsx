@@ -18,6 +18,7 @@ import { updateCycleTimeAchievementApi } from "../../../redux/action/adminAction
 import { showToast } from "../../Toast/toastServices";
 import SignPopup from "../../Modal/signVerify";
 import CustomTextField from "../../Common/customTextField";
+import { useNavigate } from "react-router-dom";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -51,18 +52,16 @@ const MemorySecond = ({ data, cc, date, place }) => {
 
     const [open, setOpen] = useState(false);
     const [assessmentData, setAssessmentData] = useState([]);
-    console.log(assessmentData, "assessmentData234")
 
     const { updateCycleTimeDetail } = useSelector((state) => state.admin);
-    console.log(updateCycleTimeDetail, "updateCycleTimeDetail")
     const dispatch = useDispatch();
     const isFirstRender = useRef(true);
     const previousDetail = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (data && data.length > 0) {
             const transformedData = data.map((exercise) => {
-                console.log(exercise, "exercise")
                 const attemptsArray = exercise?.attempts?.map((attempt) => ({
                     attempts_id: attempt.attempts_id || null,
                     JI_demo_line_captain: attempt.JI_demo_line_captain || null,
@@ -121,35 +120,84 @@ const MemorySecond = ({ data, cc, date, place }) => {
     //     });
     // };
 
+    // const handleValueChange = (exerciseIndex, field, attemptIndex, subIndex, value) => {
+    //     setAssessmentData((prevData) => {
+    //         const updatedData = [...prevData]; // Shallow copy of top-level array
+
+    //         // Deep copy the specific exercise object
+    //         updatedData[exerciseIndex] = { ...updatedData[exerciseIndex] };
+
+    //         if (attemptIndex !== null) {
+    //             // Deep copy the attempts array
+    //             updatedData[exerciseIndex].attempts = [...updatedData[exerciseIndex].attempts];
+
+    //             if (subIndex !== null) {
+    //                 // Deep copy the specific field array
+    //                 updatedData[exerciseIndex].attempts[attemptIndex][field] = [
+    //                     ...updatedData[exerciseIndex].attempts[attemptIndex][field],
+    //                 ];
+    //                 updatedData[exerciseIndex].attempts[attemptIndex][field][subIndex] = value; // Modify the value
+    //             } else {
+    //                 updatedData[exerciseIndex].attempts[attemptIndex] = {
+    //                     ...updatedData[exerciseIndex].attempts[attemptIndex],
+    //                 };
+    //                 updatedData[exerciseIndex].attempts[attemptIndex][field] = value; // Modify the value
+    //             }
+    //         } else {
+    //             updatedData[exerciseIndex] = { ...updatedData[exerciseIndex] };
+    //             updatedData[exerciseIndex][field] = value; // Modify the value
+    //         }
+
+    //         return updatedData; // Return the fully updated copy
+    //     });
+    // };
+
+
     const handleValueChange = (exerciseIndex, field, attemptIndex, subIndex, value) => {
         setAssessmentData((prevData) => {
-            const updatedData = [...prevData]; // Shallow copy of top-level array
+            const updatedData = [...prevData]; // Shallow copy
 
-            // Deep copy the specific exercise object
+            // Deep copy for exercise and attempts
             updatedData[exerciseIndex] = { ...updatedData[exerciseIndex] };
+            updatedData[exerciseIndex].attempts = [...updatedData[exerciseIndex].attempts];
 
             if (attemptIndex !== null) {
-                // Deep copy the attempts array
-                updatedData[exerciseIndex].attempts = [...updatedData[exerciseIndex].attempts];
+                // Modify specific attempt
+                updatedData[exerciseIndex].attempts[attemptIndex] = {
+                    ...updatedData[exerciseIndex].attempts[attemptIndex],
+                };
 
                 if (subIndex !== null) {
-                    // Deep copy the specific field array
+                    // Update specific subfield (cycle_time or mistakes)
                     updatedData[exerciseIndex].attempts[attemptIndex][field] = [
                         ...updatedData[exerciseIndex].attempts[attemptIndex][field],
                     ];
-                    updatedData[exerciseIndex].attempts[attemptIndex][field][subIndex] = value; // Modify the value
+                    updatedData[exerciseIndex].attempts[attemptIndex][field][subIndex] = value;
                 } else {
-                    updatedData[exerciseIndex].attempts[attemptIndex] = {
-                        ...updatedData[exerciseIndex].attempts[attemptIndex],
-                    };
-                    updatedData[exerciseIndex].attempts[attemptIndex][field] = value; // Modify the value
+                    updatedData[exerciseIndex].attempts[attemptIndex][field] = value;
                 }
             } else {
-                updatedData[exerciseIndex] = { ...updatedData[exerciseIndex] };
-                updatedData[exerciseIndex][field] = value; // Modify the value
+                // Modify exercise-level field (e.g., dct or status_)
+                updatedData[exerciseIndex][field] = value;
             }
 
-            return updatedData; // Return the fully updated copy
+            // Update status after modification
+            const attempts = updatedData[exerciseIndex].attempts;
+            const dct = updatedData[exerciseIndex].dct;
+
+            // Count valid attempts
+            const validAttempts = attempts.filter(
+                (attempt) =>
+                    Array.isArray(attempt.cycle_time) &&
+                    Array.isArray(attempt.mistakes) &&
+                    attempt.cycle_time.every((time) => time <= dct) && // Cycle time matches DCT
+                    attempt.mistakes.every((mistake) => parseInt(mistake, 10) === 0) // No mistakes
+            ).length;
+
+            // Determine status based on valid attempts
+            updatedData[exerciseIndex].status_ = validAttempts >= 2 ? "Pass" : "Fail";
+
+            return updatedData;
         });
     };
 
@@ -217,7 +265,8 @@ const MemorySecond = ({ data, cc, date, place }) => {
             previousDetail.current = updateCycleTimeDetail; // Update the previous value
             if (updateCycleTimeDetail[0]?.status === "success") {
                 showToast(updateCycleTimeDetail[0]?.message, "success");
-            } else if (updateCycleTimeDetail[0]?.action === "fail") {
+                navigate("/adminDashboard/home");
+            } else if (updateCycleTimeDetail[0]?.status === "fail") {
                 showToast(updateCycleTimeDetail[0]?.message, "error");
             }
         }
@@ -259,10 +308,10 @@ const MemorySecond = ({ data, cc, date, place }) => {
                         <StyledTableCell rowSpan={2}>Cycle Time Achievement</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Update Skill Matrix</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Process Name & Number</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>DCT</StyledTableCell>
-                        <StyledTableCell colSpan={5}>Cycle Time Achievement(Attempts)</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>Target Score</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>Actual Score</StyledTableCell>
+                        <StyledTableCell rowSpan={2}>Target Cycle Time</StyledTableCell>
+                        <StyledTableCell colSpan={5}>Cycle Time Achievement(Minimum 2 attempts needs to pass)</StyledTableCell>
+                        {/* <StyledTableCell rowSpan={2}>Target Score</StyledTableCell>
+                        <StyledTableCell rowSpan={2}>Actual Score</StyledTableCell> */}
                         <StyledTableCell rowSpan={2}>Status</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Remarks</StyledTableCell>
                     </TableRow>
@@ -330,7 +379,7 @@ const MemorySecond = ({ data, cc, date, place }) => {
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="Process Name"
+                                    // placeholder="Process Name"
                                     value={exercise.process_name}
                                     onChange={(e) =>
                                         handleValueChange(index, "process_name", null, null, e.target.value)
@@ -341,7 +390,7 @@ const MemorySecond = ({ data, cc, date, place }) => {
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="Dct"
+                                    // placeholder="Tct"
                                     value={exercise.dct}
                                     onChange={(e) =>
                                         handleValueChange(index, "dct", null, null, e.target.value)
@@ -428,8 +477,8 @@ const MemorySecond = ({ data, cc, date, place }) => {
                                     />
                                 </StyledTableCell>
                             ))}
-                            <StyledTableCell> &gt;93</StyledTableCell>
-                            <StyledTableCell>
+                            {/* <StyledTableCell> &gt;93</StyledTableCell> */}
+                            {/* <StyledTableCell>
                                 <input
                                     type="number"
                                     placeholder="Actual Score"
@@ -439,9 +488,9 @@ const MemorySecond = ({ data, cc, date, place }) => {
                                     }
                                     className="field-style2"
                                 />
-                            </StyledTableCell>
+                            </StyledTableCell> */}
                             <StyledTableCell>
-                                <select
+                                {/* <select
                                     value={exercise.status_}
                                     onChange={(e) =>
                                         handleValueChange(index, "status_", null, null, e.target.value)
@@ -451,12 +500,32 @@ const MemorySecond = ({ data, cc, date, place }) => {
                                     <option value="">Select Status</option>
                                     <option value="Pass">Pass</option>
                                     <option value="Fail">Fail</option>
-                                </select>
+                                </select> */}
+
+                                <span
+                                    style={{
+                                        color: exercise.status_ === "Pass"
+                                            ? "White"  // Green for Pass
+                                            : exercise.status_ === "Fail"
+                                                ? "White"  // Red for Fail
+                                                : "Black", // Golden Yellow for Pending
+                                        fontWeight: "bold",
+                                        backgroundColor: exercise.status_ === "Pass"
+                                            ? "#28a745"  // Green background for Pass
+                                            : exercise.status_ === "Fail"
+                                                ? "#dc3545"  // Red background for Fail
+                                                : "#FFEB3B", // Vivid Yellow background for Pending
+                                        padding: "5px 10px",  // Adding some padding for better readability
+                                        borderRadius: "4px",  // Rounded corners for the status
+                                    }}
+                                >
+                                    {exercise.status_ || "Pending"}
+                                </span>
                             </StyledTableCell>
                             <StyledTableCell>
                                 <input
                                     type="text"
-                                    placeholder="Remarks"
+                                    // placeholder="Remarks"
                                     value={exercise.remarks}
                                     onChange={(e) =>
                                         handleValueChange(index, "remarks", null, null, e.target.value)
@@ -489,7 +558,6 @@ const MemorySecond = ({ data, cc, date, place }) => {
                                 ) : (
                                     ""
                                 )}
-
                                 <Button
                                     variant="outlined"
                                     onClick={() => handleSignVerify()}

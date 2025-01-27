@@ -12,7 +12,7 @@ const CommonDropdown = ({
 }) => {
     return (
         <Box >
-            <FormControl sx={{ minWidth: 80, }}  {...props}>
+            <FormControl sx={{ minWidth: 210, }}  {...props}>
                 <InputLabel id={`${id}-label`}>{label}</InputLabel>
                 <Select
                     labelId={`${id}-label`}

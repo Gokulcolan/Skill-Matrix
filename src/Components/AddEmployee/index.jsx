@@ -28,6 +28,8 @@ const AddNewEmployee = () => {
     const dispatch = useDispatch();
     const videoRef = useRef(null);
     const navigate = useNavigate()
+    const isFirstRender = useRef(true);
+    const previousDetail = useRef(null);
 
     const [imagePreview, setImagePreview] = useState(null);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -60,6 +62,7 @@ const AddNewEmployee = () => {
     };
 
     const validationSchema = Yup.object({
+
         traineeName: Yup.string().required("Trainee Name is required"),
         ccNumber: Yup.string()
             .matches(/^\d+$/, " CC Number must contain only numbers")
@@ -82,14 +85,43 @@ const AddNewEmployee = () => {
         collegeName: Yup.string().required("College Name is required"),
         joiningDate: Yup.date().required("Joining Date is required"),
         photo: Yup.mixed().required("Photo is required"),
+
     });
+
+    // const handleFileUpload = (event, setFieldValue, setFieldTouched) => {
+    //     const file = event.target.files[0];
+    //     if (file) {
+    //         const isValidType = ["image/jpeg", "image/png", "image/jpg"].includes(file.type);
+    //         const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB limit
+
+    //         if (!isValidType || !isValidSize) {
+    //             showToast(
+    //                 isValidType
+    //                     ? "File too large. Max size is 2MB."
+    //                     : "Invalid file type. Only JPG/PNG allowed.",
+    //                 "error"
+    //             );
+    //             setFieldValue("photo", null); // Reset the value if invalid
+    //             setFieldTouched("photo", true); // Mark as touched to trigger error message
+    //             return;
+    //         }
+
+    //         const reader = new FileReader();
+    //         reader.onloadend = () => {
+    //             setImagePreview(reader.result); // Set the preview image
+    //             setFieldValue("photo", file); // Update Formik's field value
+    //             setFieldTouched("photo", true); // Mark the field as touched
+    //         };
+    //         reader.readAsDataURL(file);
+    //     }
+    // };
 
     const handleFileUpload = (event, setFieldValue) => {
         const file = event.target.files[0];
         if (file) {
             const isValidType = ["image/jpeg", "image/png", "image/jpg"].includes(file.type);
             const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB limit
-
+    
             if (!isValidType || !isValidSize) {
                 showToast(
                     isValidType
@@ -97,13 +129,14 @@ const AddNewEmployee = () => {
                         : "Invalid file type. Only JPG/PNG allowed.",
                     "error"
                 );
+                setFieldValue("photo", null); // Reset the value if invalid
                 return;
             }
-
+    
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImagePreview(reader.result);
-                setFieldValue("photo", file); // Make sure to pass the file here
+                setImagePreview(reader.result); // Set the preview image
+                setFieldValue("photo", file); // Update Formik's field value
             };
             reader.readAsDataURL(file);
         }
@@ -133,17 +166,15 @@ const AddNewEmployee = () => {
                 videoRef.current.srcObject = mediaStream;
             }
         } catch (error) {
-            console.error('Camera access error:', error);
             showToast("Unable to access the camera. Please check permissions.", "error");
         }
     };
 
-    const handleCapturePhoto = async (setFieldValue) => {
+    const handleCapturePhoto = async (setFieldValue, setFieldTouched) => {
         if (!videoRef.current) {
             showToast("Video element not found.", "error");
             return;
         }
-
         try {
             // Create a canvas element
             const canvas = document.createElement("canvas");
@@ -167,12 +198,13 @@ const AddNewEmployee = () => {
             // Update preview and form
             setImagePreview(imageUrl);
             setFieldValue("photo", file); // Ensure the file is set to the Formik field
+            setFieldTouched("photo", true); // Mark as touched
 
             // Close camera after capture
             closeCamera();
         } catch (error) {
             console.error('Photo capture error:', error);
-            showToast("Failed to capture photo", "error");
+            // showToast("Failed to capture photo", "error");
         }
     };
 
@@ -188,7 +220,7 @@ const AddNewEmployee = () => {
     };
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-
+        console.log(values, "values")
         setSubmitting(true);
 
         try {
@@ -206,6 +238,7 @@ const AddNewEmployee = () => {
                     year_passed_out: values.yearOfPass,
                     previous_cc_no: values.previouslyWorked ? values.previousCcNumber : null,
                     previously_worked: values.previouslyWorked,
+                    // photo:values
                 }]
             };
 
@@ -218,28 +251,40 @@ const AddNewEmployee = () => {
                 console.log("No photo selected!");
             }
 
-            // Log the body to verify all fields are appended
-            console.log("Request Body:", body);
-
             // Send the body data to the AP
             await dispatch(AddNewEmployeeApi(body));
-            // Handle response and show appropriate message
-            if (addNewEmployeeDetail?.status === 'Success') {
-                showToast("Employee added successfully!", "success");
-                resetForm();
-                setImagePreview(null); // Reset the image preview after submission
-                navigate("/adminDashboard/home");
-            } else {
-                showToast("Failed to add employee", "error");
-            }
+            resetForm();
+            setImagePreview(null); // Reset the image preview after submission
+
         } catch (error) {
             console.error('Error submitting form:', error);
         }
-
         finally {
             setSubmitting(false); // Reset the submitting state
         }
     };
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false; // Skip the first render
+            previousDetail.current = addNewEmployeeDetail; // Set initial value
+            return;
+        }
+
+        if (
+            addNewEmployeeDetail &&
+            addNewEmployeeDetail !== previousDetail.current
+        ) {
+            previousDetail.current = addNewEmployeeDetail; // Update previous detail
+
+            if (addNewEmployeeDetail?.status === "Success") {
+                showToast("Employee added successfully!", "success");
+                navigate("/adminDashboard/home");
+            } else if (addNewEmployeeDetail?.status === "Failed") {
+                showToast(addNewEmployeeDetail?.message, "error");
+            }
+        }
+    }, [addNewEmployeeDetail, navigate]);
 
     // Helper function to convert image file to base64
     const convertToBase64 = (file) => {
@@ -315,7 +360,8 @@ const AddNewEmployee = () => {
                             validationSchema={validationSchema}
                             onSubmit={handleSubmit}
                         >
-                            {({ values, setFieldValue, isSubmitting, handleChange, touched, errors }) => (
+                            {({ values, setFieldValue, isSubmitting, handleChange, touched, errors }) =>
+                            (
                                 <Form>
                                     <Grid container spacing={2}>
                                         {/* Other form fields remain the same... */}
@@ -455,9 +501,13 @@ const AddNewEmployee = () => {
                                                     </Box>
                                                 )}
                                             </Box>
+
+                                            {touched.photo && errors.photo && (
+                                                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                                                    {errors.photo}
+                                                </Typography>
+                                            )}
                                         </Grid>
-
-
                                         <Grid item xs={12} md={6}>
                                             <FormControlLabel
                                                 control={
@@ -483,7 +533,7 @@ const AddNewEmployee = () => {
                                                 <FormikTextField
                                                     name="previousCcNumber"
                                                     label="Previous CC Number"
-                                                    helperText="Please enter your previous CC Number"
+                                                    // helperText="Please enter your previous CC Number"
                                                     value={values.previousCcNumber}
                                                     onChange={handleChange} // Make sure handleChange is available from Formik
                                                     error={touched.previousCcNumber && Boolean(errors.previousCcNumber)}

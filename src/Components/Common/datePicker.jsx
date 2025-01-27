@@ -6,6 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
 export default function CommonDatePicker({ selectedDate, onDateChange }) {
+    
     const handleDateChange = (newDate) => {
         if (newDate) {
             onDateChange(dayjs(newDate)); // Pass a `dayjs` object
@@ -17,7 +18,7 @@ export default function CommonDatePicker({ selectedDate, onDateChange }) {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DemoContainer sx={{ marginRight: "10px" }} components={['DatePicker']}>
+            <DemoContainer  components={['DatePicker']}>
                 <DatePicker
                     label="Select Test Date"
                     value={selectedDate ? dayjs(selectedDate) : null} // Handle both prepopulated and cleared states

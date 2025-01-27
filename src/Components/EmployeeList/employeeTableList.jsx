@@ -1,14 +1,26 @@
-import React from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, tableCellClasses, Button } from "@mui/material";
+import React, { useEffect, useRef, useState } from "react";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Box } from "@mui/material";
 import styled from "@emotion/styled";
 import { useNavigate } from "react-router-dom";
-import { SearchEmployeApi } from "../../redux/action/adminAction";
-import { useDispatch } from "react-redux";
+import { generateQRApi, SearchEmployeApi } from "../../redux/action/adminAction";
+import { useDispatch, useSelector } from "react-redux";
+import QRPopup from "../Modal/qrModal";
+import { showToast } from "../Toast/toastServices";
 
 const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey }) => {
 
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const isFirstRender = useRef(true);
+  const previousDetail = useRef(null);
+
+  const [open, setOpen] = useState(false);
+  const [qrData, setQRData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+
+  const { generateQRDetail } = useSelector((state) => state.admin)
+
 
   const StyledTableCell = styled(TableCell)({
     "&.MuiTableCell-head": {
@@ -40,6 +52,53 @@ const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey 
     navigate(`/adminDashboard/safety/`);
   }
 
+  const handleGenerateQR = async (row) => {
+    // Reset qrData before making the API call
+    setQRData(null); // Clear old data
+
+    const payload = [{ cc_no: row.cc_no }];
+    try {
+      await dispatch(generateQRApi(payload));
+    } catch (error) {
+      console.log("Error generating QR", error);
+    }
+  };
+
+  useEffect(() => {
+
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // Set to false after the first render
+      previousDetail.current = generateQRDetail; // Set initial value
+      return; // Skip showing toast on the first render
+    }
+
+    // Show toast only if updateEmployeeDetail has changed
+    if (
+      generateQRDetail &&
+      generateQRDetail !== previousDetail.current
+    ) {
+      previousDetail.current = generateQRDetail; // Update the previous value
+      if (generateQRDetail?.status === "success") {
+        setQRData(generateQRDetail);
+        showToast(generateQRDetail?.message, "success");
+        setLoading(false);
+      } else if (generateQRDetail?.status === "fail") {
+        showToast(generateQRDetail?.message, "error");
+        setLoading(false);
+      }
+    }
+  }, [generateQRDetail]);
+
+
+  // Use useEffect to watch the qrData and open the modal when qrData is updated
+  useEffect(() => {
+    if (qrData) {
+      setOpen(true); // Open the modal when qrData is set
+    }
+  }, [qrData]); // This will run whenever qrData changes
+
+
+
   return (
     <TableContainer component={Paper} sx={{ marginTop: "20px", maxHeight: "400px", overflowY: "auto" }}>
       <Table stickyHeader aria-label="customized table">
@@ -63,14 +122,25 @@ const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey 
               {columns.map((column, columnIndex) => (
                 <StyledTableCell key={columnIndex} align={column.align || "left"}>
                   {column.id === "action" ? (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleView(row)}
-                      color="primary"
-                    >
-                      View
-                    </Button>
+                    <Box display="flex" gap={1}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleView(row)}
+                        color="primary"
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleGenerateQR(row)}
+                        color="primary"
+                      >
+                        Generate QR
+                      </Button>
+                    </Box>
+
                   ) : column.id === "photo" ? ( // Render photo if column.id is "photo"
                     row[column.id] && ( // Ensure there's a value for photo
                       (row[column.id].startsWith("http") || row[column.id].startsWith("data:image")) ? (
@@ -96,6 +166,12 @@ const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey 
           ))}
         </TableBody>
       </Table>
+      <QRPopup
+        openModal={open}
+        setOpenModal={() => setOpen(false)}
+        data={qrData}
+      // resetData={resetData} // Reset data when modal is closed
+      />
     </TableContainer>
   );
 };

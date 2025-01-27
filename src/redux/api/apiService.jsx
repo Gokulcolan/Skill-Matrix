@@ -98,7 +98,6 @@ export const Apiservice = async (method, url, body, params) => {
         };
       }
     } catch (error) {
-      console.log("An error occurred:", error);
       if (error.message === "Network Error") {
         // showToast("Network Error", "error");
         return Promise.reject();

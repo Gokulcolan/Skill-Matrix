@@ -10,7 +10,6 @@ import MemorySecond from '../MemoryTest/SecondOff/MemorySecond';
 import dayjs from 'dayjs';
 import CustomTextField from './customTextField';
 
-
 const TableFilters = ({ employeeTrainingDetails }) => {
 
     const TrainingDetails = employeeTrainingDetails?.Safety_training;
@@ -47,7 +46,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
     const [updatedCycleGamesValues, setUpdatedCycleGamesValues] = useState([]);
     const [updatedMemoryTestValues, setUpdatedMemoryTestValues] = useState([]);
     const [updatedCycleAchievementValues, setUpdatedCycleAchievementValues] = useState([]);
-    console.log(updatedCycleAchievementValues,"updatedCycleAchievementValues")
+
 
     useEffect(() => {
         if (Array.isArray(TrainingDetails)) { // Ensure TrainingDetails is an array
@@ -55,8 +54,11 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 const matchingDetail = TrainingDetails.find(
                     detail => detail.topics === row.topic
                 );
-                // const place = matchingDetail.place
-                // setSafetyPlace(place)
+
+                const place = matchingDetail.place
+                const date = matchingDetail.date
+                setSafetyPlace(place)
+                setSafetyDate(date)
                 return {
                     ...row,
                     actual_score: matchingDetail?.actual_score || "",
@@ -68,8 +70,9 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             });
             setUpdatedSafetyTrainingValues(updatedValues);
         } else {
-            console.error("TrainingDetails is not an array:", TrainingDetails);
+
             setSafetyPlace(null);
+            setSafetyDate(null)
         }
     }, [TrainingDetails, SafetyTrainingValues]);
 
@@ -105,6 +108,10 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                     status_: matchingGame.status_ || "",
                 };
             });
+            const place = CycleGames[0].place
+            const date = CycleGames[0].date
+            setCycleGamesPlace(place)
+            setCycleGamesDate(date)
             setUpdatedCycleGamesValues(updatedValues);
         } else {
             // If no data, create a default set of 5 exercises with empty data
@@ -125,6 +132,8 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 })),
                 status_: "",
             }));
+            setCycleGamesPlace(null)
+            setCycleGamesDate(null)
             setUpdatedCycleGamesValues(defaultValues);
         }
     }, [CycleGames]);
@@ -136,7 +145,9 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 const matchingGame = MemoryTest.find(game => game.task_id === exerciseData.task_id) || {};
                 // Update the date from API response or set to null for manual selection
                 const apiDate = matchingGame.date ? dayjs(matchingGame.date).format('YYYY-MM-DD') : null;
+                const place = matchingGame.place
                 setMemoryTestDate(apiDate);
+                setMemoryTestPlace(place)
                 // Create consistent attempts array with 5 entries
                 const attempts = Array.from({ length: 5 }, (_, index) => {
                     const attempt = matchingGame.attempts ?
@@ -184,16 +195,22 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 // date: "",
             }));
             setMemoryTestDate(null); // Reset date for manual selection
+            setMemoryTestPlace(null)
             setUpdatedMemoryTestValues(defaultValues);
         }
     }, [MemoryTest]);
 
     useEffect(() => {
         if (CycleAchievement && CycleAchievement.length > 0) {
-            setCycleAchievementDate(MemoryTest[0]?.date);
             const updatedValues = CycleTimeAchievement.map((exerciseData) => {
                 // Find matching game for this exercise, if exists
+
                 const matchingGame = CycleAchievement.find(game => game.task_id === exerciseData.task_id) || {};
+                const date = matchingGame.date
+                const place = matchingGame.place
+
+                setCycleAchievementPlace(place);
+                setCycleAchievementDate(date);
                 // Create consistent attempts array with 5 entries
                 const attempts = Array.from({ length: 5 }, (_, index) => {
                     const attempt = matchingGame.attempts ?
@@ -253,6 +270,8 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 dct: "",
                 date: "",
             }));
+            setCycleAchievementPlace(null);
+            setCycleAchievementDate(null);
             setUpdatedCycleAchievementValues(defaultValues);
         }
     }, [CycleAchievement]);
@@ -321,7 +340,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
 
     useEffect(() => {
         let apiPlace = null;
-    
+
         // Determine the correct source of data based on `selectedValue`
         switch (selectedValue) {
             case 10: // SafetyTask
@@ -339,7 +358,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             default:
                 console.warn("Unhandled selectedValue:", selectedValue);
         }
-    
+
         // Explicitly reset `selectedPlace` if `apiPlace` is null
         setSelectedPlace(apiPlace || ""); // Use an empty string if place is not available
     }, [TrainingDetails, CycleGames, MemoryTest, CycleAchievement, selectedValue]);
@@ -377,14 +396,6 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 ? "2 - JI Memory Test"
                 : "Cycle Time Achievement";
 
-    const place = selectedValue === 10
-        ? "Training Center"
-        : selectedValue === 20
-            ? "Process Coach"
-            : selectedValue === 30
-                ? "Line Captain / Team Leader"
-                : "Line Captain";
-
     const owner = selectedValue === 40
         ? "Owner: Module Controller" : selectedValue === 20 ? "Owner: Process Coach" : selectedValue === 30 ? "Owner: Line Captain / Team Leader"
             : "Owner: Training Officer";
@@ -415,7 +426,8 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                             label="Place"
                             value={selectedPlace}
                             onChange={handlePlaceChange} // Update on chang
-                            className="field-style" />
+                            className="field-style"
+                        />
                     </Grid>
                     <Grid item xs={2}>
                         <CommonDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} />

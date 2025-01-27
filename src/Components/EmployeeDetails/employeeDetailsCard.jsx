@@ -49,7 +49,6 @@ const EmployeeDetailsCard = ({ employeeDetails }) => {
     }
 
     const bio = employeeDetails?.bio[0]; // Access the first item in the bio array
-    console.log(bio,"bio")
 
 
     return (

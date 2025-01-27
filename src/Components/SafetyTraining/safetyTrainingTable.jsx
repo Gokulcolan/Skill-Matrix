@@ -8,80 +8,50 @@ import {
   TableRow,
   Paper,
   Button,
-  Select,
-  MenuItem,
   tableCellClasses,
+  TableFooter,
 } from "@mui/material";
-import { borderBottom, styled } from "@mui/system";
+import { styled } from "@mui/system";
 import { SafetyTrainingHead } from "../../utils/constants/tableDatas";
 import { useDispatch, useSelector } from "react-redux";
 import { updateEmployeDetailApi } from "../../redux/action/adminAction";
 import { showToast } from "../Toast/toastServices";
 import SignPopup from "../Modal/signVerify";
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-// const StyledTableCell = styled(TableCell)(({ theme,index  }) => ({
-//   [`&.${tableCellClasses.head}`]: {
-//     backgroundColor: "#1976d2",
-//     color: "#fff",
-//     fontWeight: "bold",
-//   },
-//   [`&.${tableCellClasses.body}`]: {
-//     fontSize: 14,
-//   },
-// }));
-
-// const StyledTableRow = styled(TableRow)(({ theme }) => ({
-//   "&:nth-of-type(odd)": {
-//     backgroundColor: "rgb(0 0 0 / 4%)",
-//   },
-//   "&:last-child td, &:last-child th": {
-//     border: 0,
-//   },
-// }));
-
-const StyledTableCell = styled(TableCell)(({ theme, columnIndex }) => ({
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: "#1976d2",
     color: "#fff",
     fontWeight: "bold",
-    borderBottom: columnIndex === 0 ? "1px solid rgba(224, 224, 224, 1)" : "none",
-    padding: "15px 16px",
-    textAlign: "center", // Center text in header
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
-    backgroundColor: columnIndex % 2 === 0 ? "rgb(240, 240, 240)" : "rgb(255, 255, 255)",
-    borderBottom: columnIndex === 0 ? "1px solid rgb(197, 196, 196)" : "none",
-    padding: "15px 16px",
-    transition: "background-color 0.3s ease", // Smooth transition on hover
-    textAlign: "center", // Center text in header
   },
-  // Hover Effect for Table Cells
-  // "&:hover": {
-  //   backgroundColor: "rgb(210, 210, 210)", // Light hover effect
-  // },
+  [`&.${tableCellClasses.footer}`]: {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
 }));
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: "rgb(0 0 0 / 4%)",
+  },
   "&:last-child td, &:last-child th": {
     border: 0,
   },
-  // Add hover effect on the row
-  "&:hover": {
-    backgroundColor: "rgb(245, 245, 245)", // Hover color for row
-  },
-  // Add some spacing and shadow to rows
-  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
 }));
-
 
 
 const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place }) => {
 
   const [tableData, setTableData] = useState([]);
+  console.log(tableData, "tableData")
   const [open, setOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState(null);
+  const [finalStatus, setFinalStatus] = useState("Pending"); // Add finalStatus to state
 
   const { updateEmployeeDetail } = useSelector((state) => state.admin);
 
@@ -89,22 +59,66 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
   const isFirstRender = useRef(true);
   const previousDetail = useRef(null);
 
-  // Initialize table data from props
+  // Helper function to process rows and calculate overall score and status
+  const processTableData = (data) => {
+    const processedData = data.map((row) => {
+      const overallScore = Object.keys(row)
+        .filter((key) => key.startsWith("actual_score"))
+        .reduce((sum, key) => sum + (Number(row[key]) || 0), 0);
+      return {
+        ...row,
+        status_: overallScore >= 40 ? "Pass" : overallScore > 0 ? "Fail" : "Pending",
+      };
+    });
+
+    // Calculate final status across all rows
+    const totalScoreAcrossRows = processedData.reduce(
+      (sum, row) => sum + (Number(row.actual_score) || 0),
+      0
+    );
+    const finalStatus = totalScoreAcrossRows >= 40 ? "Pass" : "Fail";
+    return { processedData, finalStatus };
+  };
+
+
+
+  // useEffect to process initial data
   useEffect(() => {
     if (initialData) {
-      setTableData(initialData);
+      const { processedData, finalStatus } = processTableData(initialData);
+      setTableData(processedData);
+      setFinalStatus(finalStatus);
     }
   }, [initialData]);
 
-  // Handle input changes in the table
   const handleInputChange = (rowIndex, field, value) => {
-    if (field === "actual_score" && isNaN(value)) {
-      return; // Prevent non-numeric input
-    }
-    const updatedData = tableData.map((row, index) =>
-      index === rowIndex ? { ...row, [field]: value } : row
+    const updatedData = tableData.map((row, index) => {
+      if (index === rowIndex) {
+        const updatedRow = { ...row, [field]: value };
+        if (field.startsWith("actual_score")) {
+          // Calculate overall score and update status only if `actual_score` is modified
+          const overallScore = Object.keys(updatedRow)
+            .filter((key) => key.startsWith("actual_score"))
+            .reduce((sum, key) => sum + (Number(updatedRow[key]) || 0), 0);
+
+          updatedRow.status_ = overallScore >= 40 ? "Pass" : "Fail";
+        }
+        return updatedRow;
+      }
+      return row;
+    });
+
+    // Final status calculation remains unaffected
+    const totalScoreAcrossRows = updatedData.reduce(
+      (sum, row) => sum + (Number(row.actual_score) || 0),
+      0
     );
+    const calculatedFinalStatus = totalScoreAcrossRows >= 40 ? "Pass" : "Fail";
+
     setTableData(updatedData);
+    setFinalStatus(calculatedFinalStatus);
+
+    // Trigger callback if provided
     if (onValueChange) onValueChange(updatedData);
   };
 
@@ -130,6 +144,7 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
       cc_no: cc,
       date: date,
       place: place,
+      over_all_status: finalStatus,
     }];
     dispatch(updateEmployeDetailApi(payload));
   };
@@ -164,7 +179,6 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
 
   return (
     <>
-
       <TableContainer component={Paper} sx={{ mt: 2, mb: 2 }}>
         <Table stickyHeader>
           <TableHead>
@@ -181,55 +195,104 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
               <StyledTableRow key={rowIndex}>
                 {SafetyTrainingHead.map((column, columnIndex) => (
                   <StyledTableCell key={column.id} align="left" columnIndex={columnIndex}>
-                    {column.id === "sign_by_trainee" && rowIndex === 4 ? (
-                      row[column.id] ? (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <img
-                            src={row[column.id].startsWith("http") || row[column.id].startsWith("data:image") ? row[column.id] : "https://via.placeholder.com/150"} // Use the image URL or Base64 data if available, fallback to placeholder
-                            alt="Profile"
-                            className="signature-img"
-                          />
-                          <span style={{ color: "green", fontWeight: "bold" }}>Signed</span>
-                          <CheckCircleIcon color="success" />
-                        </div>
+                    {
+                      isEditable(column.id) ? (
+                        <input
+                          className="field-style"
+                          type={column.id === "actual_score" ? "number" : "text"}
+                          value={row[column.id] || ""}
+                          onChange={(e) => handleInputChange(rowIndex, column.id, e.target.value)}
+                        />
                       ) : (
-                        <Button
-                          variant="outlined"
-                          onClick={() => handleSignVerify(rowIndex)}
-                        >
-                          Click here to Sign
-                        </Button>
-                      )
-                    ) : column.id === "status_" && rowIndex === 4 ? (
-                      <Select
-                        value={row[column.id] || ""}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, column.id, e.target.value)
-                        }
-                        className="field-drop-style"
-                        fullWidth
-                      >
-                        <MenuItem value="Pass">Pass</MenuItem>
-                        <MenuItem value="Fail">Fail</MenuItem>
-                      </Select>
-                    ) : isEditable(column.id) && rowIndex === 4 ? (
-                      <input
-                        className="field-style"
-                        type={column.id === "actual_score" ? "number" : "text"}
-                        value={row[column.id] || ""}
-                        onChange={(e) =>
-                          handleInputChange(rowIndex, column.id, e.target.value)
-                        }
-                      />
-                    ) : (
-                      row[column.id] || ""
-                    )
-                    }
+                        row[column.id] || ""
+                      )}
                   </StyledTableCell>
                 ))}
               </StyledTableRow>
             ))}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              {/* Status Column */}
+              <StyledTableCell>
+                <div style={{ display: "flex", justifyContent: "space-around" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                    <p>Status</p>
+                    <span
+                      style={{
+                        color:
+                          finalStatus === "Pass"
+                            ? "white"
+                            : finalStatus === "Fail"
+                              ? "white"
+                              : !finalStatus
+                                ? "black"
+                                : "white",
+                        backgroundColor:
+                          finalStatus === "Pass"
+                            ? "#14b014"
+                            : finalStatus === "Fail"
+                              ? "red"
+                              : !finalStatus
+                                ? "yellow"
+                                : "red",
+                        fontWeight: "bold",
+
+                        borderRadius: "4px",
+                      }}
+                      className="field-drop-style"
+                    >
+                      {finalStatus || "Pending"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                    <p>Remarks</p>
+                    <input
+                      type="text"
+                      value={tableData[0]?.Remarks || ""}
+                      onChange={(e) => handleInputChange(0, "Remarks", e.target.value)}
+                      className="field-style"
+                    />
+                  </div>
+                </div>
+              </StyledTableCell>
+              {/* Signatures Columns */}
+              <StyledTableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Signature by Trainee</p>
+                  <div >
+                    {tableData[0]?.sign_by_trainee ? (
+                      <img
+                        src={
+                          tableData[0]?.sign_by_trainee.startsWith("http") ||
+                            tableData[0]?.sign_by_trainee.startsWith("data:image")
+                            ? tableData[0]?.sign_by_trainee
+                            : "https://via.placeholder.com/150"
+                        }
+                        alt="Trainee Signature"
+                        className="signature-img-cycle"
+                      />
+                    ) : (
+                      <Button variant="outlined" onClick={() => handleSignVerify(0)} sx={{ backgroundColor: "white" }}>
+                        Click here to Sign
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </StyledTableCell>
+              <StyledTableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Signature by Training Officer</p>
+                  <input
+                    type="text"
+                    value={tableData[0]?.sign_by_training_officer || ""}
+                    onChange={(e) => handleInputChange(0, "sign_by_training_officer", e.target.value)}
+                    className="field-style"
+                  />
+                </div>
+              </StyledTableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Button
@@ -242,13 +305,11 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
           </Button>
         </div>
       </TableContainer>
-
       <SignPopup
         openModal={open}
         setOpenModal={() => setOpen(false)}
         onSave={handleSaveSignature}
       />
-
     </>
   );
 };
