@@ -45,10 +45,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 
-const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place }) => {
-
+const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, testdate, place, entryDate, attendance }) => {
+ 
   const [tableData, setTableData] = useState([]);
-  console.log(tableData, "tableData")
   const [open, setOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState(null);
   const [finalStatus, setFinalStatus] = useState("Pending"); // Add finalStatus to state
@@ -80,8 +79,6 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
     return { processedData, finalStatus };
   };
 
-
-
   // useEffect to process initial data
   useEffect(() => {
     if (initialData) {
@@ -100,7 +97,6 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
           const overallScore = Object.keys(updatedRow)
             .filter((key) => key.startsWith("actual_score"))
             .reduce((sum, key) => sum + (Number(updatedRow[key]) || 0), 0);
-
           updatedRow.status_ = overallScore >= 40 ? "Pass" : "Fail";
         }
         return updatedRow;
@@ -108,12 +104,21 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
       return row;
     });
 
+    // Now handle the additional conditions for rows 3, 4, and 5
+    const row3Valid = updatedData[2].actual_score >= 3; // Row index 2 for the 3rd row
+    const row4Valid = updatedData[3].actual_score >= 3; // Row index 3 for the 4th row
+    const row5Valid = updatedData[4].actual_score >= 5; // Row index 4 for the 5th row
+
     // Final status calculation remains unaffected
     const totalScoreAcrossRows = updatedData.reduce(
       (sum, row) => sum + (Number(row.actual_score) || 0),
       0
     );
-    const calculatedFinalStatus = totalScoreAcrossRows >= 40 ? "Pass" : "Fail";
+    // Check if overall score is >= 40 and other conditions for rows 3, 4, and 5 are met
+    const calculatedFinalStatus =
+      totalScoreAcrossRows >= 40 && row3Valid && row4Valid && row5Valid
+        ? "Pass"
+        : "Fail";
 
     setTableData(updatedData);
     setFinalStatus(calculatedFinalStatus);
@@ -142,8 +147,12 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
     const payload = [{
       Safety_training: tableData,
       cc_no: cc,
-      date: date,
+      date: testdate,
       place: place,
+      entry_date: entryDate,
+      attendance_day1: attendance.day1,
+      attendance_day2: attendance.day2,
+      attendance_day3: attendance.day3,
       over_all_status: finalStatus,
     }];
     dispatch(updateEmployeDetailApi(payload));
@@ -192,6 +201,7 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
           </TableHead>
           <TableBody>
             {tableData.map((row, rowIndex) => (
+              // console.log(row,"row")
               <StyledTableRow key={rowIndex}>
                 {SafetyTrainingHead.map((column, columnIndex) => (
                   <StyledTableCell key={column.id} align="left" columnIndex={columnIndex}>
@@ -215,45 +225,47 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
             <TableRow>
               {/* Status Column */}
               <StyledTableCell>
-                <div style={{ display: "flex", justifyContent: "space-around" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-                    <p>Status</p>
-                    <span
-                      style={{
-                        color:
-                          finalStatus === "Pass"
+                {/* <div style={{ display: "flex", justifyContent: "space-around" }}> */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Status</p>
+                  <span
+                    style={{
+                      color:
+                        finalStatus === "Pass"
+                          ? "white"
+                          : finalStatus === "Fail"
                             ? "white"
-                            : finalStatus === "Fail"
-                              ? "white"
-                              : !finalStatus
-                                ? "black"
-                                : "white",
-                        backgroundColor:
-                          finalStatus === "Pass"
-                            ? "#14b014"
-                            : finalStatus === "Fail"
-                              ? "red"
-                              : !finalStatus
-                                ? "yellow"
-                                : "red",
-                        fontWeight: "bold",
-
-                        borderRadius: "4px",
-                      }}
-                      className="field-drop-style"
-                    >
-                      {finalStatus || "Pending"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-                    <p>Remarks</p>
-                    <input
-                      type="text"
-                      value={tableData[0]?.Remarks || ""}
-                      onChange={(e) => handleInputChange(0, "Remarks", e.target.value)}
-                      className="field-style"
-                    />
-                  </div>
+                            : !finalStatus
+                              ? "black"
+                              : "white",
+                      backgroundColor:
+                        finalStatus === "Pass"
+                          ? "#14b014"
+                          : finalStatus === "Fail"
+                            ? "red"
+                            : !finalStatus
+                              ? "yellow"
+                              : "red",
+                      fontWeight: "bold",
+                      width: "30%",
+                      borderRadius: "4px",
+                    }}
+                    className="field-drop-style"
+                  >
+                    {finalStatus || "Pending"}
+                  </span>
+                </div>
+                {/* </div> */}
+              </StyledTableCell>
+              <StyledTableCell>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                  <p>Remarks</p>
+                  <input
+                    type="text"
+                    value={tableData[0]?.Remarks || ""}
+                    onChange={(e) => handleInputChange(0, "Remarks", e.target.value)}
+                    className="field-style"
+                  />
                 </div>
               </StyledTableCell>
               {/* Signatures Columns */}
@@ -304,7 +316,7 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, date, place
             Save
           </Button>
         </div>
-      </TableContainer>
+      </TableContainer >
       <SignPopup
         openModal={open}
         setOpenModal={() => setOpen(false)}

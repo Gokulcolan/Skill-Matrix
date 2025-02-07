@@ -113,9 +113,6 @@ const Login = () => {
                       }
                       label="Remember me"
                     />
-                    {/* <Link className="forgotPassword" href="#">
-                      Forgot password?
-                    </Link> */}
                   </Box>
                   <Button
                     type="submit"

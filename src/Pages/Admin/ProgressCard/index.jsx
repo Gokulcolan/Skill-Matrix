@@ -33,18 +33,6 @@ const ProgessDetails = () => {
 
     }
 
-    // useEffect(() => {
-    //     if (searchEmployeeDetail.status === 'success') {
-    //         showToast(searchEmployeeDetail.message, "success");
-    //     }
-    //     elseif(searchEmployeeDetail?.status === 'error') {
-    //         showToast(searchEmployeeDetail.message, "error");
-    //     }
-    //     else{
-    //         ""
-    //     }
-    // }, [searchEmployeeDetail]);
-
     useEffect(() => {
         if (searchEmployeeDetail?.status === "success") {
             showToast(searchEmployeeDetail?.message, "success");

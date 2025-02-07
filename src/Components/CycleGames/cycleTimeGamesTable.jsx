@@ -48,10 +48,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-const CycleTimeGamesTable = ({ data, cc, date, place }) => {
+const CycleTimeGamesTable = ({ data, cc, date, place, BUunit }) => {
 
     const [open, setOpen] = useState(false);
-    // const [assessmentData, setAssessmentData] = useState([]);
     const [assessmentData, setAssessmentData] = useState([
         {
             signByProcessCoach: "",
@@ -62,7 +61,6 @@ const CycleTimeGamesTable = ({ data, cc, date, place }) => {
     ]);
 
     const [loading, setLoading] = useState(false);
-    console.log(loading, "loading")
     const { updateCycleGamesDetail } = useSelector((state) => state.admin);
 
     const dispatch = useDispatch();
@@ -151,14 +149,6 @@ const CycleTimeGamesTable = ({ data, cc, date, place }) => {
 
 
     const handleSave = async () => {
-
-        // Compute the overall result
-        // const overallResult = assessmentData.every((exercise) => exercise.status_ === "Pass")
-        //     ? "Pass"
-        //     : assessmentData.some((exercise) => exercise.status_ === "Fail")
-        //         ? "Fail"
-        //         : "Pending";
-
         const payload = {
             Cycle_games: assessmentData.map((exercise) => ({
                 task_id: exercise.task_id,
@@ -176,9 +166,9 @@ const CycleTimeGamesTable = ({ data, cc, date, place }) => {
             cc_no: cc,
             date: date,
             place: place,
+            BU_unit: BUunit,
             // over_all_result: overallResult,
         };
-        // dispatch(updateCycleGamesApi(payload));
         setLoading(true);
         try {
             await dispatch(updateCycleGamesApi(payload));
@@ -186,21 +176,7 @@ const CycleTimeGamesTable = ({ data, cc, date, place }) => {
             console.error("Error saving data:", error);
             setLoading(false); // Hide loader if an error occurs
         }
-        // finally {
-        //     // Always stop the loader
-        //     setLoading(false);
-        // }
     };
-
-    // useEffect(() => {
-    //     if (updateCycleGamesDetail?.Status === 'success') {
-    //         showToast(updateCycleGamesDetail?.Message, "success");
-    //         setLoading(false);
-    //     } else if (updateCycleGamesDetail?.Status === 'fail') {
-    //         showToast(updateCycleGamesDetail?.Message, "error");
-    //         setLoading(false);
-    //     }
-    // }, [updateCycleGamesDetail]);
 
     // Show toast messages based on API response
     useEffect(() => {
@@ -285,22 +261,7 @@ const CycleTimeGamesTable = ({ data, cc, date, place }) => {
                                                 // className="field-style2"
                                                 size="small"
                                             />
-                                            {/* <CommonDropdown
-                                                    label="Status"
-                                                    value={attempt.pf_status}
-                                                    options={status}
-                                                    size="small"
-                                                    onChange={(value) => handleValueChange(index, "pf_status", attemptIndex, value)}
-                                                    className="field-style"
-                                                /> */}
-                                            {/* <span
-                                                    style={{
-                                                        color: attempt.pf_status === "Pass" ? "green" : "red",
-                                                        fontWeight: "bold",
-                                                    }}
-                                                >
-                                                    {attempt.pf_status || "Pending"}
-                                                </span> */}
+                                           
                                             <div style={{ margin: "8px 0px" }}>
                                                 <span
                                                     style={{

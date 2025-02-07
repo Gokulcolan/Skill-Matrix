@@ -88,34 +88,6 @@ const AddNewEmployee = () => {
 
     });
 
-    // const handleFileUpload = (event, setFieldValue, setFieldTouched) => {
-    //     const file = event.target.files[0];
-    //     if (file) {
-    //         const isValidType = ["image/jpeg", "image/png", "image/jpg"].includes(file.type);
-    //         const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB limit
-
-    //         if (!isValidType || !isValidSize) {
-    //             showToast(
-    //                 isValidType
-    //                     ? "File too large. Max size is 2MB."
-    //                     : "Invalid file type. Only JPG/PNG allowed.",
-    //                 "error"
-    //             );
-    //             setFieldValue("photo", null); // Reset the value if invalid
-    //             setFieldTouched("photo", true); // Mark as touched to trigger error message
-    //             return;
-    //         }
-
-    //         const reader = new FileReader();
-    //         reader.onloadend = () => {
-    //             setImagePreview(reader.result); // Set the preview image
-    //             setFieldValue("photo", file); // Update Formik's field value
-    //             setFieldTouched("photo", true); // Mark the field as touched
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }
-    // };
-
     const handleFileUpload = (event, setFieldValue) => {
         const file = event.target.files[0];
         if (file) {
@@ -220,7 +192,6 @@ const AddNewEmployee = () => {
     };
 
     const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-        console.log(values, "values")
         setSubmitting(true);
 
         try {

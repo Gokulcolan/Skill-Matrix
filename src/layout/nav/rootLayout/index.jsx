@@ -18,14 +18,6 @@ import { AdminMenuItems } from "../../../utils/constants/menuItems";
 import { handleSesssionStorage } from "../../../utils/helperFunctions";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
-
-// const AppBar = styled(MuiAppBar)(({ theme }) => ({
-//   zIndex: theme.zIndex.drawer + 1,
-//   transition: theme.transitions.create(["width", "margin"], {
-//     easing: theme.transitions.easing.sharp,
-//     duration: theme.transitions.duration.leavingScreen,
-//   }),
-// }));
 const settings = ['Logout'];
 export default function RootLayout() {
   const [anchorElNav, setAnchorElNav] = useState(null);

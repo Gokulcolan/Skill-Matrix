@@ -65,10 +65,8 @@ const adminSlice = createSlice({
     },
     generateQRReducer: (state, { payload }) => {
       const { apiData, isLoading } = payload;
-  
       // Clear the previous data
       state.generateQRDetail = null;
-  
       // Set the new data
       state.generateQRDetail = apiData;
       state.generateQRIsLoading = isLoading;

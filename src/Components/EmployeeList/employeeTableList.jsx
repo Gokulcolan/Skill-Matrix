@@ -18,9 +18,7 @@ const EmployeeTableList = ({ columns = [], data = [], title, onRowClick, rowKey 
   const [qrData, setQRData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-
   const { generateQRDetail } = useSelector((state) => state.admin)
-
 
   const StyledTableCell = styled(TableCell)({
     "&.MuiTableCell-head": {

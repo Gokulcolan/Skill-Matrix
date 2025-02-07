@@ -28,10 +28,6 @@ const Home = () => {
         setLoading(true);
     }, [dispatch]);
 
-    // useEffect(() => {
-    //     // Synchronize filtered data with full data when data changes
-    //     setFilteredData(getAllEmployeeDetail?.Full_table || []);
-    // }, [getAllEmployeeDetail]);
 
     useEffect(() => {
         if (getAllEmployeeDetail) {
@@ -134,9 +130,7 @@ const Home = () => {
                 </div>
             </Box>
 
-            {/* <Box className="tablePad">
-                <EmployeeTableList columns={EmployeeListHead} data={filteredData} />
-            </Box> */}
+            
             <Box className="tablePad">
                 {loading ? (
                     <Loader /> // Replace with your loader component

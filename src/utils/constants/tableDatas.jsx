@@ -27,19 +27,15 @@ export const SafetyTrainingHead = [
   { label: "Topics", id: "topic" },
   // { label: "Total Score", id: "totalScore" },
   { label: "Target Score ( 50 )", id: "targetScore" },
-  { label: "Actual Score ( >40 To Pass )", id: "actual_score" },
-  // { label: "Status", id: "status_" },
-  // { label: "Sign by Trainee", id: "sign_by_trainee" },
-  // { label: "Sign by Training Officer", id: "sign_by_training_officer" },
-  // { label: "Remarks", id: "Remarks" },
-  // { label: "Final Status", id: "finalStatus" }
+  { label: "Actual Score ( ≥ 3 for Safety & Quality, ≥ 5 for SOP, Total ≥ 40 to Pass)", id: "actual_score" },
+  { label: "Faculty Name", id: "faculty_name" },
+
 ];
 
 // Define table row data with pre-filled scores
 export const SafetyTrainingValues = [
   {
     topic: "About Lucas TVS (Customers/Products/Policies)",
-    
     targetScore: "5",
     si_no: 1,
   },
@@ -102,6 +98,7 @@ export const SafetyTrainingValues = [
 ].map(row => ({
   ...row,
   actual_score: "",
+  faculty_name: "",
   status_: "",
   sign_by_trainee: "",
   sign_by_training_officer: "",
@@ -113,6 +110,11 @@ export const DaysFilter = [
   { value: 20, label: "DAY 4" },
   { value: 30, label: "DAY 5 - First Half" },
   { value: 40, label: "DAY 5 - Second Half" },
+];
+
+export const AttendanceFilter = [
+  { value: "Present", label: "Present" },
+  { value: "Absent", label: "Absent" },
 ];
 
 export const status = [
@@ -141,15 +143,6 @@ export const MemoryTestData = [
 export const CycleTimeAchievement = [
   { task_id: 1 },
 ];
-
-// export const MemoryTestHead = [
-//   { label: "Process Name & Number", id: "topic" },
-//   { label: "My Process Observation", id: "totalScore" },
-//   { label: "Target Score", id: "targetScore" },
-//   { label: "Status", id: "status_" },
-//   { label: "Remarks", id: "Remarks" },
-//   { label: "Skill Assessment (Attempts)", id: "attempt" }
-// ];
 
 
 

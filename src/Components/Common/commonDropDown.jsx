@@ -8,11 +8,12 @@ const CommonDropdown = ({
     onChange,
     id = "common-dropdown",
     fullWidth = true,
+    sx = {},
     ...props
 }) => {
     return (
         <Box >
-            <FormControl sx={{ minWidth: 210, }}  {...props}>
+            <FormControl sx={{ minWidth: 210, ...sx }}  {...props}>
                 <InputLabel id={`${id}-label`}>{label}</InputLabel>
                 <Select
                     labelId={`${id}-label`}

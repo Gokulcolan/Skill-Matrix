@@ -38,8 +38,8 @@ const EmployeeDetailsCard = ({ employeeDetails }) => {
                             </div>
                             <div className="details-column">
                                 <p><b>College Name</b> -  </p>
-                                <p><b>Branch </b>- </p>
                                 <p><b>Qualification </b>- </p>
+                                <p><b>Branch </b>- </p>
                             </div>
                         </div>
                     </div>
@@ -87,8 +87,8 @@ const EmployeeDetailsCard = ({ employeeDetails }) => {
                         </div>
                         <div className="details-column">
                             <p><b>College Name</b> - {bio?.college_name}</p>
-                            <p><b>Branch</b> - {bio?.branch}</p>
                             <p><b>Qualification</b> - {bio?.qualification}</p>
+                            <p><b>Branch</b> - {bio?.branch}</p>
                         </div>
                     </div>
                 </div>

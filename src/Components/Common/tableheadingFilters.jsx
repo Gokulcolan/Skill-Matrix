@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { CycleGamesExerciseData, CycleTimeAchievement, DaysFilter, MemoryTestData, SafetyTrainingHead, SafetyTrainingValues } from '../../utils/constants/tableDatas';
+import { AttendanceFilter, CycleGamesExerciseData, CycleTimeAchievement, DaysFilter, MemoryTestData, SafetyTrainingHead, SafetyTrainingValues } from '../../utils/constants/tableDatas';
 import CommonDropdown from './commonDropDown';
-import { Grid, Typography } from "@mui/material";
+import { Card, CardContent, Grid, Typography } from "@mui/material";
 import SafetyTrainingTable from '../SafetyTraining/safetyTrainingTable';
 import CycleTimeGamesTable from '../CycleGames/cycleTimeGamesTable';
 import CommonDatePicker from './datePicker';
@@ -21,6 +21,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
 
     const [selectedValue, setSelectedValue] = useState(10);
     const [selectedDate, setSelectedDate] = useState(); // State to hold the selected date
+    const [entryDate, setEntryDate] = useState(); // State to hold the selected date
     const [safetyDate, setSafetyDate] = useState(); // State to hold the selected date
     const [cycleGamesDate, setCycleGamesDate] = useState(); // State to hold the selected date
     const [memoryTestDate, setMemoryTestDate] = useState(); // State to hold the selected date
@@ -30,23 +31,37 @@ const TableFilters = ({ employeeTrainingDetails }) => {
     const [cycleGamesPlace, setCycleGamesPlace] = useState(); // State to hold the selected date
     const [memoryTestPlace, setMemoryTestPlace] = useState(); // State to hold the selected date
     const [cycleAchievementPlace, setCycleAchievementPlace] = useState(); // State to hold the selected date
-
+    const [selectedAttendance, setSelectedAttendance] = useState({
+        day1: "",
+        day2: "",
+        day3: "",
+    });
     const [updatedSafetyTrainingValues, setUpdatedSafetyTrainingValues] = useState(
         () =>
             (SafetyTrainingValues || []).map(row => ({
                 ...row,
                 actual_score: "",
+                faculty_name: "",
                 status_: "",
                 sign_by_trainee: "",
                 sign_by_training_officer: "",
                 Remarks: "",
             }))
     );
-
     const [updatedCycleGamesValues, setUpdatedCycleGamesValues] = useState([]);
     const [updatedMemoryTestValues, setUpdatedMemoryTestValues] = useState([]);
     const [updatedCycleAchievementValues, setUpdatedCycleAchievementValues] = useState([]);
-
+    const [BUunit, setBUunit] = useState()
+    const [formValuesFirst, setFormValuesFirst] = useState({
+        module: "",
+        cell: "",
+        processName: "",
+    });
+    const [formValuesSecond, setFormValuesSecond] = useState({
+        module: "",
+        cell: "",
+        processName: "",
+    });
 
     useEffect(() => {
         if (Array.isArray(TrainingDetails)) { // Ensure TrainingDetails is an array
@@ -54,14 +69,22 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 const matchingDetail = TrainingDetails.find(
                     detail => detail.topics === row.topic
                 );
-
-                const place = matchingDetail.place
-                const date = matchingDetail.date
+                const place = matchingDetail?.place || "";
+                const date = matchingDetail?.date || "";
+                const entryDate = matchingDetail?.entry_date || "";
+                const attendance = {
+                    day1: matchingDetail?.day_one || "",
+                    day2: matchingDetail?.day_two || "",
+                    day3: matchingDetail?.day_three || "",
+                };
                 setSafetyPlace(place)
                 setSafetyDate(date)
+                setEntryDate(entryDate)
+                setSelectedAttendance(attendance);
                 return {
                     ...row,
                     actual_score: matchingDetail?.actual_score || "",
+                    faculty_name: matchingDetail?.faculty_name || "",
                     status_: matchingDetail?.status_ || "",
                     sign_by_trainee: matchingDetail?.sign_by_trainee || "",
                     sign_by_training_officer: matchingDetail?.sign_by_training_officer || "",
@@ -70,9 +93,14 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             });
             setUpdatedSafetyTrainingValues(updatedValues);
         } else {
-
-            setSafetyPlace(null);
+            setSafetyPlace(null)
             setSafetyDate(null)
+            setEntryDate(null)
+            setSelectedAttendance({
+                day1: "",
+                day2: "",
+                day3: "",
+            }); // Reset to default object
         }
     }, [TrainingDetails, SafetyTrainingValues]);
 
@@ -94,7 +122,6 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                         pf_status: attempt.pf_status || "",
                     };
                 });
-
                 return {
                     task_id: exerciseData.task_id,
                     dct: exerciseData.dct,
@@ -110,8 +137,10 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             });
             const place = CycleGames[0].place
             const date = CycleGames[0].date
+            const BU = CycleGames[0].BU_unit
             setCycleGamesPlace(place)
             setCycleGamesDate(date)
+            setBUunit(BU)
             setUpdatedCycleGamesValues(updatedValues);
         } else {
             // If no data, create a default set of 5 exercises with empty data
@@ -134,6 +163,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             }));
             setCycleGamesPlace(null)
             setCycleGamesDate(null)
+            setBUunit(null)
             setUpdatedCycleGamesValues(defaultValues);
         }
     }, [CycleGames]);
@@ -146,8 +176,14 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 // Update the date from API response or set to null for manual selection
                 const apiDate = matchingGame.date ? dayjs(matchingGame.date).format('YYYY-MM-DD') : null;
                 const place = matchingGame.place
+                const fields = {
+                    cell: matchingGame?.cell || "" || undefined,
+                    module: matchingGame?.module || "" || undefined,
+                    processName: matchingGame?.title_memory_process_name || "" || undefined,
+                };
                 setMemoryTestDate(apiDate);
                 setMemoryTestPlace(place)
+                setFormValuesFirst(fields)
                 // Create consistent attempts array with 5 entries
                 const attempts = Array.from({ length: 5 }, (_, index) => {
                     const attempt = matchingGame.attempts ?
@@ -195,7 +231,8 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 // date: "",
             }));
             setMemoryTestDate(null); // Reset date for manual selection
-            setMemoryTestPlace(null)
+            setMemoryTestPlace(null);
+            setFormValuesFirst(null)
             setUpdatedMemoryTestValues(defaultValues);
         }
     }, [MemoryTest]);
@@ -208,9 +245,14 @@ const TableFilters = ({ employeeTrainingDetails }) => {
                 const matchingGame = CycleAchievement.find(game => game.task_id === exerciseData.task_id) || {};
                 const date = matchingGame.date
                 const place = matchingGame.place
-
+                const fields = {
+                    cell: matchingGame?.cell || "",
+                    module: matchingGame?.module || "",
+                    processName: matchingGame?.title_cycle_process_name || "",
+                };
                 setCycleAchievementPlace(place);
                 setCycleAchievementDate(date);
+                setFormValuesSecond(fields)
                 // Create consistent attempts array with 5 entries
                 const attempts = Array.from({ length: 5 }, (_, index) => {
                     const attempt = matchingGame.attempts ?
@@ -273,11 +315,19 @@ const TableFilters = ({ employeeTrainingDetails }) => {
             setCycleAchievementPlace(null);
             setCycleAchievementDate(null);
             setUpdatedCycleAchievementValues(defaultValues);
+            setFormValuesSecond(null)
         }
     }, [CycleAchievement]);
 
     const handleDropdownChange = (value) => {
         setSelectedValue(value);
+    };
+
+    const handleAttendanceChange = (day, value) => {
+        setSelectedAttendance((prev) => ({
+            ...prev,
+            [day]: value,
+        }));
     };
 
     useEffect(() => {
@@ -320,6 +370,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
 
         // Dynamically set state based on `selectedValue`
         const formattedDate = normalizedDate?.format('YYYY-MM-DD') || '';
+
         switch (selectedValue) {
             case 10:
                 setSafetyDate(formattedDate);
@@ -338,9 +389,15 @@ const TableFilters = ({ employeeTrainingDetails }) => {
         }
     };
 
+    const handleEntryDate = (date) => {
+        // Ensure `date` is a `dayjs` instance
+        const normalizedDate = date ? dayjs(date) : null;
+        const formattedDate = normalizedDate?.format('YYYY-MM-DD') || '';
+        setEntryDate(formattedDate);
+    }
+
     useEffect(() => {
         let apiPlace = null;
-
         // Determine the correct source of data based on `selectedValue`
         switch (selectedValue) {
             case 10: // SafetyTask
@@ -366,9 +423,7 @@ const TableFilters = ({ employeeTrainingDetails }) => {
     const handlePlaceChange = (e) => {
         // Ensure `date` is a `dayjs` instance
         const place = e.target.value
-
         setSelectedPlace(place); // Update the selected date locally
-
         // Dynamically set state based on `selectedValue`
         switch (selectedValue) {
             case 10:
@@ -388,60 +443,194 @@ const TableFilters = ({ employeeTrainingDetails }) => {
         }
     };
 
+    const handleBUunit = (e) => {
+        const BU = e.target.value
+        setBUunit(BU); // Update the selected date locally
+    }
+
+    const handleInputChangeFirst = (e) => {
+        const { name, value } = e.target;
+        setFormValuesFirst((prev) => ({ ...(prev || {}), [name]: value }));
+    };
+    const handleInputChangeSecond = (e) => {
+        const { name, value } = e.target;
+        setFormValuesSecond((prev) => ({ ...(prev || {}), [name]: value }));
+    };
+
+    const titleFields = [
+        { label: "Module", placeholder: "Enter Module", name: "module" },
+        { label: "Cell", placeholder: "Enter Cell", name: "cell" },
+        { label: "Process Name", placeholder: "Enter Process Name", name: "processName" },
+    ];
+
     const title = selectedValue === 10
-        ? "1a - Basic & Safety Training"
+        ? "1a - Basic Induction Training"
         : selectedValue === 20
-            ? "1b - Cycle Time Games"
+            ? "1b - Dexterity Exercise"
             : selectedValue === 30
                 ? "2 - JI Memory Test"
-                : "Cycle Time Achievement";
+                : "3 - Cycle Time Achievement";
 
     const owner = selectedValue === 40
         ? "Owner: Module Controller" : selectedValue === 20 ? "Owner: Process Coach" : selectedValue === 30 ? "Owner: Line Captain / Team Leader"
             : "Owner: Training Officer";
 
-
     const table = selectedValue === 10
-        ? <SafetyTrainingTable columns={SafetyTrainingHead} data={updatedSafetyTrainingValues} cc={cc} date={safetyDate} place={safetyPlace} />
+        ? <SafetyTrainingTable columns={SafetyTrainingHead} data={updatedSafetyTrainingValues} cc={cc} testdate={safetyDate} place={safetyPlace} entryDate={entryDate} attendance={selectedAttendance} />
         : selectedValue === 20
-            ? <CycleTimeGamesTable data={updatedCycleGamesValues} cc={cc} date={cycleGamesDate} place={cycleGamesPlace} />
-            : selectedValue === 30 ? <MemoryFirst data={updatedMemoryTestValues} cc={cc} date={memoryTestDate} place={memoryTestPlace} /> : <MemorySecond data={updatedCycleAchievementValues} cc={cc} date={cycleAchievementDate} place={cycleAchievementPlace} />;
+            ? <CycleTimeGamesTable data={updatedCycleGamesValues} cc={cc} date={cycleGamesDate} place={cycleGamesPlace} BUunit={BUunit} />
+            : selectedValue === 30 ? <MemoryFirst data={updatedMemoryTestValues} cc={cc} date={memoryTestDate} place={memoryTestPlace} fieldValues={formValuesFirst} />
+                : <MemorySecond data={updatedCycleAchievementValues} cc={cc} date={cycleAchievementDate} place={cycleAchievementPlace} fieldValues={formValuesSecond} />;
 
     return (
         <>
-            <div style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "8px", backgroundColor: "#f9f9f9" }}>
-                <Grid container spacing={2} alignItems="center" sx={{ display: "flex", justifyContent: "center" }}>
-                    <Grid item xs={2}>
-                        <Typography variant="h6" color="black" sx={{ fontWeight: "600" }}>
-                            {title}
-                        </Typography>
+            <Card className="p-6 rounded-2xl shadow-xl bg-white" sx={{ padding:"10px",backgroundColor: "#f9f9f9", boxShadow: "rgba(0, 0, 0, 0.16) 0px 1px 4px", textAlign: "none !important" }}>
+                <CardContent>
+                    <Grid container spacing={4} alignItems="center" justifyContent="space-between" className="mb-6">
+                        {/* Title in the center */}
+                        <Grid item xs={12} sm={10} md={10} className="flex justify-center">
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                    <Typography
+                                        variant="h5"
+                                        className="font-bold text-gray-700"
+                                        sx={{ fontWeight: "bold" }}
+                                    >
+                                        {title}
+                                    </Typography>
+                                </div>
+                                <div>
+                                    <Typography variant="body1" className="font-medium text-gray-600" sx={{ fontWeight: "bold" }}>
+                                        {owner}
+                                    </Typography>
+                                </div>
+                            </div>
+                        </Grid>
+                        {/* Target Completion Dropdown aligned to the right */}
+                        <Grid item xs={12} sm={2} md={2} className="flex justify-end">
+                            <CommonDropdown
+                                label="Target Completion"
+                                options={DaysFilter}
+                                value={selectedValue}
+                                onChange={handleDropdownChange}
+                                className="w-full"
+                            />
+                        </Grid>
                     </Grid>
-                    <Grid item xs={2}>
-                        <Typography variant="body1" sx={{ fontWeight: "600" }}>{owner}</Typography>
+
+                    {/* Owner, Place, and Test Date Section */}
+                    <Grid container spacing={4} alignItems="center" justifyContent="center" className="mb-6">
+                      
+                        <Grid item xs={12} sm={6} md={3}>
+                            <CustomTextField
+                                placeholder="Enter Place"
+                                label="Place"
+                                value={selectedPlace}
+                                onChange={handlePlaceChange}
+                                className="w-full"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <CommonDatePicker
+                                selectedDate={selectedDate}
+                                onDateChange={handleDateChange}
+                                label={selectedValue === 10 || selectedValue === 20 ? "Test Date" : "Deployment Date"}
+                                className="w-full"
+                                sx={{ width: "100%" }}
+                            />
+                        </Grid>
+                        {selectedValue === 20 ? (
+                            <>
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <CustomTextField
+                                        placeholder="Enter BU Unit"
+                                        label="BU Unit"
+                                        value={BUunit}
+                                        onChange={handleBUunit}
+                                        className="w-full"
+                                    />
+                                </Grid>
+                            </>
+                        ) : null}
                     </Grid>
-                    <Grid item xs={2}>
-                        {/* <Typography variant="body1" sx={{ fontWeight: "600" }}>{place}</Typography> */}
-                        <CustomTextField
-                            placeholder="Place"
-                            label="Place"
-                            value={selectedPlace}
-                            onChange={handlePlaceChange} // Update on chang
-                            className="field-style"
-                        />
-                    </Grid>
-                    <Grid item xs={2}>
-                        <CommonDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} />
-                    </Grid>
-                    <Grid item xs={2}>
-                        <CommonDropdown
-                            label="Target Completion"
-                            options={DaysFilter}
-                            value={selectedValue}
-                            onChange={handleDropdownChange}
-                        />
-                    </Grid>
-                </Grid>
-            </div>
+                    <br />
+                    {selectedValue === 10 ? (
+                        <>
+                            {/* Attendance Record Section */}
+                            <Grid container spacing={4} >
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <Typography
+                                        variant="h6"
+                                        className="font-semibold text-gray-700 mb-6"
+                                        sx={{ fontWeight: "bold" }}
+                                    >
+                                        Attendance Record
+                                    </Typography>
+                                </Grid>
+                            </Grid>
+
+                            <br />
+                            <Grid container spacing={4} alignItems="center" justifyContent="center">
+                                <Grid item xs={12} sm={6} md={3}>
+                                    <CommonDatePicker
+                                        selectedDate={entryDate}
+                                        onDateChange={handleEntryDate}
+                                        label="Trainee Entry Date"
+                                        sx={{ width: "100%" }}
+                                    />
+                                </Grid>
+                                {['day1', 'day2', 'day3'].map((day, index) => (
+                                    <Grid item xs={12} sm={6} md={3} key={index}>
+                                        <CommonDropdown
+                                            label={`Day ${index + 1}`}
+                                            options={AttendanceFilter}
+                                            value={selectedAttendance[day]}
+                                            onChange={(value) => handleAttendanceChange(day, value)}
+                                            sx={{ width: "100%" }}
+                                        />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </>
+                    )
+                        : selectedValue === 30 ? (
+                            <>
+                                <Grid container spacing={4} alignItems="center" justifyContent="center" className="mb-6">
+                                    {titleFields?.length > 0 && titleFields?.map((field) => (
+                                        <Grid item xs={12} sm={6} md={3} key={field.name}>
+                                            <CustomTextField
+                                                placeholder={field.placeholder}
+                                                label={field.label}
+                                                value={formValuesFirst?.[field.name] || ""}
+                                                onChange={handleInputChangeFirst}
+                                                name={field.name}
+                                                className="w-full"
+                                            />
+                                        </Grid>
+                                    ))}
+
+                                </Grid>
+                            </>
+                        ) : selectedValue === 40 ? (<>
+                            <Grid container spacing={4} alignItems="center" justifyContent="center" className="mb-6">
+                                {titleFields?.length > 0 && titleFields?.map((field) => (
+                                    <Grid item xs={12} sm={6} md={3} key={field.name}>
+                                        <CustomTextField
+                                            placeholder={field.placeholder}
+                                            label={field.label}
+                                            value={formValuesSecond?.[field?.name] || ""}
+                                            onChange={handleInputChangeSecond}
+                                            name={field.name}
+                                            className="w-full"
+                                        />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </>
+                        ) : null
+                    }
+                </CardContent>
+            </Card>
             <div>
                 {table}
             </div>

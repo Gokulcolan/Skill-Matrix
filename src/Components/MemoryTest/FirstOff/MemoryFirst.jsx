@@ -17,8 +17,6 @@ import SignPopup from "../../Modal/signVerify";
 import { showToast } from "../../Toast/toastServices";
 import { updateMemoryTestApi } from "../../../redux/action/adminAction";
 import CustomTextField from "../../Common/customTextField";
-import { status } from "../../../utils/constants/tableDatas";
-import CommonDropdown from "../../Common/commonDropDown";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -48,8 +46,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-const MemoryFirst = ({ data, cc, date, place }) => {
+const MemoryFirst = ({ data, cc, date, place, fieldValues }) => {
 
+    const { module, cell, processName } = fieldValues || {};
     const [open, setOpen] = useState(false);
     const [assessmentData, setAssessmentData] = useState([]);
     const { updateMemoryTestDetail } = useSelector((state) => state.admin);
@@ -82,21 +81,6 @@ const MemoryFirst = ({ data, cc, date, place }) => {
             setAssessmentData(transformedData);
         }
     }, [data]);
-
-    // const handleValueChange = (exerciseIndex, field, attemptIndex, value) => {
-    //     setAssessmentData((prevData) => {
-    //         const updatedData = [...prevData];
-    //         if (attemptIndex !== null) {
-    //             updatedData[exerciseIndex].attempts[attemptIndex] = {
-    //                 ...updatedData[exerciseIndex].attempts[attemptIndex],
-    //                 [field]: value,
-    //             };
-    //         } else {
-    //             updatedData[exerciseIndex][field] = value;
-    //         }
-    //         return updatedData;
-    //     });
-    // };
 
     const handleValueChange = (exerciseIndex, field, attemptIndex, value) => {
         setAssessmentData((prevData) => {
@@ -146,12 +130,14 @@ const MemoryFirst = ({ data, cc, date, place }) => {
                 },
                 date: date,
                 place: place,
+                module: module,
+                cell: cell,
+                title_memory_process_name: processName,
             })),
             cc_no: cc,
         };
         dispatch(updateMemoryTestApi(payload));
     };
-
 
     // Show toast messages based on API response
     useEffect(() => {
@@ -194,7 +180,7 @@ const MemoryFirst = ({ data, cc, date, place }) => {
                     <TableRow>
                         <StyledTableCell rowSpan={2}>Process Name & Number</StyledTableCell>
                         <StyledTableCell rowSpan={2}>My Process Observation</StyledTableCell>
-                        <StyledTableCell rowSpan={2}>No of Heart Test</StyledTableCell>
+                        <StyledTableCell rowSpan={2}>No of Oral Test</StyledTableCell>
                         <StyledTableCell colSpan={5}>Skill Assessment ( To pass, a minimum of two attempts, starting from zero, is required )</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Status</StyledTableCell>
                         <StyledTableCell rowSpan={2}>Remarks</StyledTableCell>

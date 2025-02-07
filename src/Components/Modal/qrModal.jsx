@@ -21,14 +21,11 @@ const QRPopup = ({ openModal, setOpenModal, data }) => {
     };
 
     const handleClose = () => {
-        // Call the resetData function passed as a prop to reset the data
-        // resetData();
         setOpenModal(false);
     };
 
     // Safe access to the data
     const personalInfo = data?.personal_info || {}; // Safely access personal_info
-    console.log(personalInfo,"personalInfo ")
     const photo = personalInfo.photo || "/path/to/default-photo.jpg"; // Default photo if none exists
     const name = personalInfo.name || "John Doe"; // Default name if none exists
     const ccNo = personalInfo.cc_no || "N/A"; // Default CCNO if none exists
