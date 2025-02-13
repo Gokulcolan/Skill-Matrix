@@ -8,11 +8,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const userRole =
     typeof window !== "undefined" ? sessionStorage.getItem("ur") : null;
-
   const routeType = userRole !== null ? userRole : 0;
-
   const router = useRoutes(getRoutes(routeType));
-
 
   useEffect(() => {
     setTimeout(() => {

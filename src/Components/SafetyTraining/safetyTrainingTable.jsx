@@ -46,11 +46,11 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 
 const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, testdate, place, entryDate, attendance }) => {
- 
+
   const [tableData, setTableData] = useState([]);
   const [open, setOpen] = useState(false);
   const [currentRow, setCurrentRow] = useState(null);
-  const [finalStatus, setFinalStatus] = useState("Pending"); // Add finalStatus to state
+  const [finalStatus, setFinalStatus] = useState("Pending"); 
 
   const { updateEmployeeDetail } = useSelector((state) => state.admin);
 
@@ -70,12 +70,25 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, testdate, p
       };
     });
 
-    // Calculate final status across all rows
+    // Row-wise specific validations
+    const row3Valid = processedData[2]?.actual_score >= 3; // Row index 2 for the 3rd row
+    const row4Valid = processedData[3]?.actual_score >= 3; // Row index 3 for the 4th row
+    const row5Valid = processedData[4]?.actual_score >= 5; // Row index 4 for the 5th row
+
+    // Calculate the total score across all rows
     const totalScoreAcrossRows = processedData.reduce(
-      (sum, row) => sum + (Number(row.actual_score) || 0),
+      (sum, row) => sum + Object.keys(row)
+        .filter((key) => key.startsWith("actual_score"))
+        .reduce((scoreSum, key) => scoreSum + (Number(row[key]) || 0), 0),
       0
     );
-    const finalStatus = totalScoreAcrossRows >= 40 ? "Pass" : "Fail";
+
+    // Final status based on the score and row-specific validations
+    const finalStatus =
+      totalScoreAcrossRows >= 40 && row3Valid && row4Valid && row5Valid
+        ? "Pass"
+        : "Fail";
+
     return { processedData, finalStatus };
   };
 
@@ -89,6 +102,7 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, testdate, p
   }, [initialData]);
 
   const handleInputChange = (rowIndex, field, value) => {
+    
     const updatedData = tableData.map((row, index) => {
       if (index === rowIndex) {
         const updatedRow = { ...row, [field]: value };
@@ -119,7 +133,7 @@ const SafetyTrainingTable = ({ data: initialData, onValueChange, cc, testdate, p
       totalScoreAcrossRows >= 40 && row3Valid && row4Valid && row5Valid
         ? "Pass"
         : "Fail";
-
+    console.log(calculatedFinalStatus, "calculatedFinalStatus")
     setTableData(updatedData);
     setFinalStatus(calculatedFinalStatus);
 

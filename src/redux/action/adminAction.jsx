@@ -2,7 +2,7 @@
 import { Apiservice } from "../api/apiService";
 import { addNewEmployeeReducer, generateQRReducer, getAllEmployeeDetailReducer, searchEmployeeReducer, signVerifyReducer, updateCycleGamesReducer, updateCycleTimeReducer, updateEmployeeDetailReducer, updateMemoryTestReducer } from "../slice/adminSlice";
 
-export function apiHelper(apiReducer, method, apiURL, data = "", Toastmessage = "", giveToast = true) {
+export function apiHelper(apiReducer, method, apiURL, data = "") {
   return async (dispatch) => {
     dispatch(apiReducer({ isLoading: true }));
     Apiservice(method, apiURL, data)
